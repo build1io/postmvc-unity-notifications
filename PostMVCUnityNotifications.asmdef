@@ -1,0 +1,23 @@
+{
+    "name": "PostMVCUnityNotifications",
+    "rootNamespace": "",
+    "references": [
+        "PostMVC",
+        "Unity.Notifications.iOS",
+        "Unity.Notifications.Android",
+        "Unity.Notifications"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [
+        "Android",
+        "Editor",
+        "iOS"
+    ],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
