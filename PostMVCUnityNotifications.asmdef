@@ -8,11 +8,7 @@
         "Unity.Notifications"
     ],
     "includePlatforms": [],
-    "excludePlatforms": [
-        "Android",
-        "Editor",
-        "iOS"
-    ],
+    "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
