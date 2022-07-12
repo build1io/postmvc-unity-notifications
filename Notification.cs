@@ -13,7 +13,7 @@ namespace Build1.PostMVC.Unity.Modules.Notifications
         public readonly string largeIcon;
 
         public int  TimeoutSeconds   { get; private set; }
-        public bool ShowInForeground { get; private set; }
+        public bool ShowInForeground { get; private set; } = true;
 
         public Notification(int id, string title, string text)
         {
