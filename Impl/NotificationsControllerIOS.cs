@@ -225,7 +225,7 @@ namespace Build1.PostMVC.Unity.Modules.Notifications.Impl
                 Subtitle = notification.subTitle,
                 Body = notification.text,
 
-                ShowInForeground = true,
+                ShowInForeground = notification.ShowInForeground,
                 ForegroundPresentationOption = PresentationOption.Alert | PresentationOption.Badge | PresentationOption.Sound,
                 Badge = 1,
                 CategoryIdentifier = "default_category",
