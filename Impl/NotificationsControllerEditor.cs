@@ -41,6 +41,12 @@ namespace Build1.PostMVC.Unity.Modules.Notifications.Impl
             Enabled = enabled;
         }
 
+        public bool TryGetAuthorized(out bool value)
+        {
+            value = false;
+            return true;
+        }
+
         /*
          * Scheduling.
          */
