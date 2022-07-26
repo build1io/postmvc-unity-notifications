@@ -12,7 +12,8 @@ namespace Build1.PostMVC.Unity.Modules.Notifications
         public readonly string smallIcon;
         public readonly string largeIcon;
 
-        public int TimeoutSeconds { get; private set; }
+        public int  TimeoutSeconds   { get; private set; }
+        public bool ShowInForeground { get; private set; } = true;
 
         public Notification(int id, string title, string text)
         {
@@ -48,6 +49,12 @@ namespace Build1.PostMVC.Unity.Modules.Notifications
         public Notification SetTimeout(int timeoutSeconds)
         {
             TimeoutSeconds = timeoutSeconds;
+            return this;
+        }
+
+        public Notification SetShowInForeground(bool value)
+        {
+            ShowInForeground = value;
             return this;
         }
 
