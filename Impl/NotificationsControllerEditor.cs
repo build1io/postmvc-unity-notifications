@@ -36,15 +36,14 @@ namespace Build1.PostMVC.Unity.Modules.Notifications.Impl
          * Public.
          */
 
+        public NotificationsAuthorizationStatus GetAuthorizationStatus()
+        {
+            return NotificationsAuthorizationStatus.Authorized;
+        }
+
         public void SetEnabled(bool enabled)
         {
             Enabled = enabled;
-        }
-
-        public bool TryGetAuthorized(out bool value)
-        {
-            value = false;
-            return true;
         }
 
         /*

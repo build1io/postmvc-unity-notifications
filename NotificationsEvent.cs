@@ -4,6 +4,6 @@ namespace Build1.PostMVC.Unity.Modules.Notifications
 {
     public static class NotificationsEvent
     {
-        public static readonly Event Initialized = new Event();
+        public static readonly Event Initialized = new();
     }
 }

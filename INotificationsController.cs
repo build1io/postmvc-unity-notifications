@@ -3,10 +3,11 @@ namespace Build1.PostMVC.Unity.Modules.Notifications
     public interface INotificationsController
     {
         bool Initialized { get; }
-        
-        void Initialize(bool registerForRemoteNotifications);
-        void SetEnabled(bool enabled);
-        bool TryGetAuthorized(out bool value);
+        bool Enabled     { get; }
+
+        void                             Initialize(bool registerForRemoteNotifications);
+        NotificationsAuthorizationStatus GetAuthorizationStatus();
+        void                             SetEnabled(bool enabled);
 
         void ScheduleNotification(Notification notification);
 
@@ -14,6 +15,5 @@ namespace Build1.PostMVC.Unity.Modules.Notifications
         void CancelAllScheduledNotifications();
 
         void CleanDisplayedNotifications();
-
     }
 }

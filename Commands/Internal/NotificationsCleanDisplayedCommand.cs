@@ -1,9 +1,11 @@
+#if UNITY_ANDROID
+
 using Build1.PostMVC.Extensions.MVCS.Commands;
 using Build1.PostMVC.Extensions.MVCS.Injection;
 
-namespace Build1.PostMVC.Unity.Modules.Notifications.Commands
+namespace Build1.PostMVC.Unity.Modules.Notifications.Commands.Internal
 {
-    public sealed class NotificationsCleanDisplayedCommand : Command<bool>
+    internal sealed class NotificationsCleanDisplayedCommand : Command<bool>
     {
         [Inject] public INotificationsController NotificationsController { get; set; }
 
@@ -14,3 +16,5 @@ namespace Build1.PostMVC.Unity.Modules.Notifications.Commands
         }
     }
 }
+
+#endif

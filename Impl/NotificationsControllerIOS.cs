@@ -16,7 +16,9 @@ namespace Build1.PostMVC.Unity.Modules.Notifications.Impl
 {
     internal sealed class NotificationsControllerIOS : INotificationsController
     {
-        private const AuthorizationOption AuthorizationOptions = AuthorizationOption.Alert | AuthorizationOption.Badge | AuthorizationOption.Sound;
+        private const AuthorizationOption AuthorizationOptions = AuthorizationOption.Alert | 
+                                                                 AuthorizationOption.Badge | 
+                                                                 AuthorizationOption.Sound;
 
         [Log(LogLevel.Warning)] public ILog                            Log                            { get; set; }
         [Inject]                public IAsyncResolver                  AsyncResolver                  { get; set; }
@@ -26,8 +28,10 @@ namespace Build1.PostMVC.Unity.Modules.Notifications.Impl
 
         public bool Initializing => _coroutine != null;
         public bool Initialized  { get; private set; }
-        public bool Authorized   => _status == AuthorizationStatus.Authorized && ((_registerForRemoteNotifications && _deviceToken != null) || !_registerForRemoteNotifications);
         public bool Enabled      { get; private set; }
+        
+        private bool Authorized => _status == AuthorizationStatus.Authorized && 
+                                   ((_registerForRemoteNotifications && _deviceToken != null) || !_registerForRemoteNotifications);
 
         private Coroutine           _coroutine;
         private AuthorizationStatus _status;
@@ -154,16 +158,25 @@ namespace Build1.PostMVC.Unity.Modules.Notifications.Impl
         /*
          * Public.
          */
+        
+        public NotificationsAuthorizationStatus GetAuthorizationStatus()
+        {
+            var status = iOSNotificationCenter.GetNotificationSettings().AuthorizationStatus;
+
+            _status = status;
+
+            return status switch
+            {
+                AuthorizationStatus.NotDetermined => NotificationsAuthorizationStatus.NotDetermined,
+                AuthorizationStatus.Denied        => NotificationsAuthorizationStatus.Denied,
+                AuthorizationStatus.Authorized    => NotificationsAuthorizationStatus.Authorized,
+                _                                 => throw new ArgumentOutOfRangeException()
+            };
+        }
 
         public void SetEnabled(bool enabled)
         {
             Enabled = enabled;
-        }
-
-        public bool TryGetAuthorized(out bool value)
-        {
-            value = Authorized;
-            return true;
         }
 
         /*

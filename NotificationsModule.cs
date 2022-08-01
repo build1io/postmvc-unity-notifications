@@ -2,7 +2,7 @@ using Build1.PostMVC.Extensions.MVCS.Commands;
 using Build1.PostMVC.Extensions.MVCS.Injection;
 using Build1.PostMVC.Extensions.Unity.Modules.App;
 using Build1.PostMVC.Modules;
-using Build1.PostMVC.Unity.Modules.Notifications.Commands;
+using Build1.PostMVC.Unity.Modules.Notifications.Commands.Internal;
 
 namespace Build1.PostMVC.Unity.Modules.Notifications
 {
