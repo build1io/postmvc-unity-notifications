@@ -3,15 +3,13 @@ using Build1.PostMVC.Extensions.MVCS.Injection;
 
 namespace Build1.PostMVC.Unity.Modules.Notifications.Commands.Internal
 {
-    internal sealed class NotificationsClearCommand : Command<bool>
+    [Poolable]
+    internal sealed class NotificationsClearCommand : Command
     {
         [Inject] public INotificationsController NotificationsController { get; set; }
 
-        public override void Execute(bool paused)
+        public override void Execute()
         {
-            if (paused)
-                return;
-            
             NotificationsController.CleanDisplayedNotifications();
             NotificationsController.CancelAllScheduledNotifications();
         }

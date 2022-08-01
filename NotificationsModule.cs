@@ -22,13 +22,20 @@ namespace Build1.PostMVC.Unity.Modules.Notifications
                 InjectionBinder.Bind<INotificationsController>().To<Impl.NotificationsControllerIOS>().AsSingleton();
             #endif
 
-            CommandBinder.Bind(AppEvent.Pause).To<NotificationsClearCommand>();
-            
+            CommandBinder.Bind(AppEvent.Pause)
+                         .TriggerValue(false)
+                         .To0<NotificationsClearCommand>();
+
             #if UNITY_ANDROID && !UNITY_EDITOR
-                CommandBinder.Bind(AppEvent.Focus).To<NotificationsCleanDisplayedCommand>();
-            #endif
             
-            CommandBinder.Bind(NotificationsEvent.Initialized).To<NotificationsInitializedCommand>();
+            CommandBinder.Bind(AppEvent.Focus)
+                         .TriggerValue(false)
+                         .To0<NotificationsCleanDisplayedCommand>();
+            
+            #endif
+
+            CommandBinder.Bind(NotificationsEvent.Initialized)
+                         .To<NotificationsClearCommand>();
         }
     }
 }

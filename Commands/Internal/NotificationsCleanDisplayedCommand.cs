@@ -1,20 +1,16 @@
-#if UNITY_ANDROID
-
 using Build1.PostMVC.Extensions.MVCS.Commands;
 using Build1.PostMVC.Extensions.MVCS.Injection;
 
 namespace Build1.PostMVC.Unity.Modules.Notifications.Commands.Internal
 {
-    internal sealed class NotificationsCleanDisplayedCommand : Command<bool>
+    [Poolable]
+    internal sealed class NotificationsCleanDisplayedCommand : Command
     {
         [Inject] public INotificationsController NotificationsController { get; set; }
 
-        public override void Execute(bool focused)
+        public override void Execute()
         {
-            if (!focused)
-                NotificationsController.CleanDisplayedNotifications();
+            NotificationsController.CleanDisplayedNotifications();
         }
     }
 }
-
-#endif
