@@ -173,6 +173,11 @@ namespace Build1.PostMVC.Unity.Modules.Notifications.Impl
                 _                                 => throw new ArgumentOutOfRangeException()
             };
         }
+        
+        public bool CheckAuthorizationSet()
+        {
+            return GetAuthorizationStatus() != NotificationsAuthorizationStatus.NotDetermined;
+        }
 
         public void SetEnabled(bool enabled)
         {

@@ -3,11 +3,14 @@
 using Build1.PostMVC.Extensions.MVCS.Events;
 using Build1.PostMVC.Extensions.MVCS.Injection;
 using Build1.PostMVC.Extensions.Unity.Modules.Logging;
+using UnityEngine;
 
 namespace Build1.PostMVC.Unity.Modules.Notifications.Impl
 {
     internal sealed class NotificationsControllerEditor : INotificationsController
     {
+        private string AuthorizationSetPlayerPrefsKey = "PostMVC_NotificationsControllerEditor_AuthorizationSet";
+        
         [Log(LogLevel.Warning)] public ILog             Log        { get; set; }
         [Inject]                public IEventDispatcher Dispatcher { get; set; }
 
@@ -41,6 +44,15 @@ namespace Build1.PostMVC.Unity.Modules.Notifications.Impl
             return NotificationsAuthorizationStatus.Authorized;
         }
 
+        public bool CheckAuthorizationSet()
+        {
+            if (!PlayerPrefs.HasKey(AuthorizationSetPlayerPrefsKey))
+                return false;
+            
+            var value = (NotificationsAuthorizationStatus)PlayerPrefs.GetInt(AuthorizationSetPlayerPrefsKey);
+            return value != NotificationsAuthorizationStatus.NotDetermined; 
+        }
+
         public void SetEnabled(bool enabled)
         {
             Enabled = enabled;
@@ -64,6 +76,9 @@ namespace Build1.PostMVC.Unity.Modules.Notifications.Impl
                 return;
             }
 
+            if (!PlayerPrefs.HasKey(AuthorizationSetPlayerPrefsKey))
+                PlayerPrefs.SetInt(AuthorizationSetPlayerPrefsKey, (int)NotificationsAuthorizationStatus.Authorized);
+            
             Log.Debug(n => $"Scheduling notification: {n}", notification);
         }
 

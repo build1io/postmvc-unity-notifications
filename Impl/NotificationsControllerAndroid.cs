@@ -56,6 +56,12 @@ namespace Build1.PostMVC.Unity.Modules.Notifications.Impl
             return NotificationsAuthorizationStatus.Authorized;
         }
         
+        public bool CheckAuthorizationSet()
+        {
+            // Always true for Android.
+            return true;
+        }
+        
         public void SetEnabled(bool enabled)
         {
             Enabled = enabled;
