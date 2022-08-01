@@ -6,12 +6,14 @@ namespace Build1.PostMVC.Unity.Modules.Notifications
         
         void Initialize(bool registerForRemoteNotifications);
         void SetEnabled(bool enabled);
-        
+        bool TryGetAuthorized(out bool value);
+
         void ScheduleNotification(Notification notification);
 
         void CancelScheduledNotification(Notification notification);
         void CancelAllScheduledNotifications();
 
         void CleanDisplayedNotifications();
+
     }
 }
