@@ -1,9 +1,8 @@
-using Build1.PostMVC.Core.Extensions.MVCS.Commands;
-using Build1.PostMVC.Core.Extensions.MVCS.Events;
-using Build1.PostMVC.Core.Extensions.MVCS.Injection;
-using Build1.PostMVC.Extensions.MVCS.Events;
+using Build1.PostMVC.Core.MVCS.Commands;
+using Build1.PostMVC.Core.MVCS.Events;
+using Build1.PostMVC.Core.MVCS.Injection;
 
-namespace Build1.PostMVC.UnityNotifications.Commands
+namespace Build1.PostMVC.Unity.Notifications.Commands
 {
     public sealed class NotificationsInitializeCommand : Command<bool>
     {

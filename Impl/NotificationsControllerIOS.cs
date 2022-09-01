@@ -3,16 +3,16 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using Build1.PostMVC.Core.Extensions.MVCS.Events;
-using Build1.PostMVC.Core.Extensions.MVCS.Injection;
-using Build1.PostMVC.UnityApp.Modules.Async;
-using Build1.PostMVC.UnityApp.Modules.Coroutines;
-using Build1.PostMVC.UnityApp.Modules.InternetReachability;
-using Build1.PostMVC.UnityApp.Modules.Logging;
+using Build1.PostMVC.Core.MVCS.Events;
+using Build1.PostMVC.Core.MVCS.Injection;
+using Build1.PostMVC.Unity.App.Modules.Async;
+using Build1.PostMVC.Unity.App.Modules.Coroutines;
+using Build1.PostMVC.Unity.App.Modules.InternetReachability;
+using Build1.PostMVC.Unity.App.Modules.Logging;
 using Unity.Notifications.iOS;
 using UnityEngine;
 
-namespace Build1.PostMVC.UnityNotifications.Impl
+namespace Build1.PostMVC.Unity.Notifications.Impl
 {
     internal sealed class NotificationsControllerIOS : INotificationsController
     {

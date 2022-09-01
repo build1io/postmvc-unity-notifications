@@ -1,12 +1,12 @@
 #if UNITY_ANDROID
 
 using System;
-using Build1.PostMVC.Core.Extensions.MVCS.Events;
-using Build1.PostMVC.Core.Extensions.MVCS.Injection;
-using Build1.PostMVC.UnityApp.Modules.Logging;
+using Build1.PostMVC.Core.MVCS.Events;
+using Build1.PostMVC.Core.MVCS.Injection;
+using Build1.PostMVC.Unity.App.Modules.Logging;
 using Unity.Notifications.Android;
 
-namespace Build1.PostMVC.UnityNotifications.Impl
+namespace Build1.PostMVC.Unity.Notifications.Impl
 {
     internal sealed class NotificationsControllerAndroid : INotificationsController
     {
