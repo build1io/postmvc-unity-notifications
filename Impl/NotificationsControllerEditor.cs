@@ -1,11 +1,12 @@
 #if UNITY_EDITOR
 
+using Build1.PostMVC.Core.Extensions.MVCS.Events;
+using Build1.PostMVC.Core.Extensions.MVCS.Injection;
 using Build1.PostMVC.Extensions.MVCS.Events;
-using Build1.PostMVC.Extensions.MVCS.Injection;
 using Build1.PostMVC.Extensions.Unity.Modules.Logging;
 using UnityEngine;
 
-namespace Build1.PostMVC.Unity.Modules.Notifications.Impl
+namespace Build1.PostMVC.UnityNotifications.Impl
 {
     internal sealed class NotificationsControllerEditor : INotificationsController
     {

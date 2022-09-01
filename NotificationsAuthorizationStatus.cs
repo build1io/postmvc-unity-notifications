@@ -1,4 +1,4 @@
-namespace Build1.PostMVC.Unity.Modules.Notifications
+namespace Build1.PostMVC.UnityNotifications
 {
     public enum NotificationsAuthorizationStatus
     {

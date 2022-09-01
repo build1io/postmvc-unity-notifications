@@ -3,6 +3,7 @@
     "rootNamespace": "",
     "references": [
         "PostMVC",
+        "PostMVCUnityApp",
         "Unity.Notifications.iOS",
         "Unity.Notifications.Android",
         "Unity.Notifications"

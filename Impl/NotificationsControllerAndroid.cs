@@ -6,7 +6,7 @@ using Build1.PostMVC.Extensions.MVCS.Injection;
 using Build1.PostMVC.Extensions.Unity.Modules.Logging;
 using Unity.Notifications.Android;
 
-namespace Build1.PostMVC.Unity.Modules.Notifications.Impl
+namespace Build1.PostMVC.UnityNotifications.Impl
 {
     internal sealed class NotificationsControllerAndroid : INotificationsController
     {

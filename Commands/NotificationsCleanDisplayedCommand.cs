@@ -1,10 +1,10 @@
-using Build1.PostMVC.Extensions.MVCS.Commands;
-using Build1.PostMVC.Extensions.MVCS.Injection;
+using Build1.PostMVC.Core.Extensions.MVCS.Commands;
+using Build1.PostMVC.Core.Extensions.MVCS.Injection;
 
-namespace Build1.PostMVC.Unity.Modules.Notifications.Commands.Internal
+namespace Build1.PostMVC.UnityNotifications.Commands
 {
     [Poolable]
-    internal sealed class NotificationsCleanDisplayedCommand : Command
+    public sealed class NotificationsCleanDisplayedCommand : Command
     {
         [Inject] public INotificationsController NotificationsController { get; set; }
 

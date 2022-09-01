@@ -3,8 +3,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using Build1.PostMVC.Core.Extensions.MVCS.Events;
+using Build1.PostMVC.Core.Extensions.MVCS.Injection;
 using Build1.PostMVC.Extensions.MVCS.Events;
-using Build1.PostMVC.Extensions.MVCS.Injection;
 using Build1.PostMVC.Extensions.Unity.Modules.Async;
 using Build1.PostMVC.Extensions.Unity.Modules.Coroutines;
 using Build1.PostMVC.Extensions.Unity.Modules.InternetReachability;
@@ -12,7 +13,7 @@ using Build1.PostMVC.Extensions.Unity.Modules.Logging;
 using Unity.Notifications.iOS;
 using UnityEngine;
 
-namespace Build1.PostMVC.Unity.Modules.Notifications.Impl
+namespace Build1.PostMVC.UnityNotifications.Impl
 {
     internal sealed class NotificationsControllerIOS : INotificationsController
     {
