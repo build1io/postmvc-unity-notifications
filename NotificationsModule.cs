@@ -16,27 +16,27 @@ namespace Build1.PostMVC.Unity.Notifications
         public void PostConstruct()
         {
             #if UNITY_EDITOR
-                InjectionBinder.Bind<INotificationsController>().To<NotificationsControllerEditor>().AsSingleton();
+                InjectionBinder.Bind<INotificationsController, NotificationsControllerEditor>();
             #elif UNITY_ANDROID
-                InjectionBinder.Bind<INotificationsController>().To<NotificationsControllerAndroid>().AsSingleton();
+                InjectionBinder.Bind<INotificationsController, NotificationsControllerAndroid>();
             #elif UNITY_IOS
-                InjectionBinder.Bind<INotificationsController>().To<NotificationsControllerIOS>().AsSingleton();
+                InjectionBinder.Bind<INotificationsController, NotificationsControllerIOS>();
             #endif
 
             CommandBinder.Bind(AppEvent.Pause)
                          .TriggerValue(false)
-                         .To0<NotificationsClearAllCommand>();
+                         .To1<NotificationsClearCommand, NotificationState>(NotificationState.All);
 
             #if UNITY_ANDROID && !UNITY_EDITOR
             
             CommandBinder.Bind(AppEvent.Focus)
                          .TriggerValue(false)
-                         .To0<NotificationsCleanDisplayedCommand>();
+                         .To1<NotificationsClearCommand, NotificationState>(NotificationState.Displayed);
             
             #endif
 
             CommandBinder.Bind(NotificationsEvent.Initialized)
-                         .To<NotificationsClearAllCommand>();
+                         .To1<NotificationsClearCommand, NotificationState>(NotificationState.All);
         }
     }
 }
