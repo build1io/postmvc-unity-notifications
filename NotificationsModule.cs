@@ -3,7 +3,6 @@ using Build1.PostMVC.Core.MVCS.Commands;
 using Build1.PostMVC.Core.MVCS.Injection;
 using Build1.PostMVC.Unity.App.Modules.App;
 using Build1.PostMVC.Unity.Notifications.Commands;
-using Build1.PostMVC.Unity.Notifications.Impl;
 
 namespace Build1.PostMVC.Unity.Notifications
 {
@@ -16,11 +15,11 @@ namespace Build1.PostMVC.Unity.Notifications
         public void PostConstruct()
         {
             #if UNITY_EDITOR
-                InjectionBinder.Bind<INotificationsController, NotificationsControllerEditor>();
+                InjectionBinder.Bind<INotificationsController, Impl.NotificationsControllerEditor>();
             #elif UNITY_ANDROID
-                InjectionBinder.Bind<INotificationsController, NotificationsControllerAndroid>();
+                InjectionBinder.Bind<INotificationsController, Impl.NotificationsControllerAndroid>();
             #elif UNITY_IOS
-                InjectionBinder.Bind<INotificationsController, NotificationsControllerIOS>();
+                InjectionBinder.Bind<INotificationsController, Impl.NotificationsControllerIOS>();
             #endif
 
             CommandBinder.Bind(AppEvent.Pause)
