@@ -30,7 +30,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         {
             if (Initialized)
             {
-                Log.Warn("Already initialized.");
+                Log.Warn("Already initialized");
                 return;
             }
 
@@ -68,13 +68,13 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         {
             if (!Initialized)
             {
-                Log.Error("Notification not initialized.");
+                Log.Error("Notifications not initialized");
                 return;
             }
 
             if (!Enabled)
             {
-                Log.Debug("Notifications disabled.");
+                Log.Debug("Notifications disabled");
                 return;
             }
 
@@ -120,13 +120,13 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         {
             if (!Initialized)
             {
-                Log.Error("Notification not initialized.");
+                Log.Error("Notifications not initialized");
                 return;
             }
 
             if (!Enabled)
             {
-                Log.Debug("Notifications disabled.");
+                Log.Debug("Notifications disabled");
                 return;
             }
 
