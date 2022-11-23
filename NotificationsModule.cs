@@ -19,9 +19,9 @@ namespace Build1.PostMVC.Unity.Notifications
             #elif UNITY_ANDROID
                 InjectionBinder.Bind<INotificationsController, Impl.NotificationsControllerAndroid>();
             #elif UNITY_IOS
-                InjectionBinder.Bind<INotificationsController, Impl.NotificationsControllerIOS>();
+                InjectionBinder.Bind<INotificationsController, Impl.NotificationsControllerIOS>().ConstructOnStart();    
             #endif
-
+            
             CommandBinder.Bind(AppEvent.Pause)
                          .TriggerValue(false)
                          .To1<NotificationsClearCommand, NotificationState>(NotificationState.All);

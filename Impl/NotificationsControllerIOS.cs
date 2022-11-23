@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using Build1.PostMVC.Core.MVCS.Events;
 using Build1.PostMVC.Core.MVCS.Injection;
+using Build1.PostMVC.Unity.App.Modules.App;
 using Build1.PostMVC.Unity.App.Modules.Async;
 using Build1.PostMVC.Unity.App.Modules.Coroutines;
 using Build1.PostMVC.Unity.App.Modules.InternetReachability;
@@ -16,8 +17,8 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 {
     internal sealed class NotificationsControllerIOS : INotificationsController
     {
-        private const AuthorizationOption AuthorizationOptions = AuthorizationOption.Alert | 
-                                                                 AuthorizationOption.Badge | 
+        private const AuthorizationOption AuthorizationOptions = AuthorizationOption.Alert |
+                                                                 AuthorizationOption.Badge |
                                                                  AuthorizationOption.Sound;
 
         [Log(LogLevel.Warning)] public ILog                            Log                            { get; set; }
@@ -29,8 +30,8 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         public bool Initializing => _coroutine != null;
         public bool Initialized  { get; private set; }
         public bool Enabled      { get; private set; }
-        
-        private bool Authorized => _status == AuthorizationStatus.Authorized && 
+
+        private bool Authorized => _status == AuthorizationStatus.Authorized &&
                                    ((_registerForRemoteNotifications && _deviceToken != null) || !_registerForRemoteNotifications);
 
         private Coroutine           _coroutine;
@@ -40,9 +41,16 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         private List<Notification>  _notificationToSchedule;
         private int                 _callId;
 
+        [PostConstruct]
+        public void PostConstruct()
+        {
+            Dispatcher.AddListener(AppEvent.Pause, OnAppPause);
+        }
+        
         [PreDestroy]
         public void PreDestroy()
         {
+            Dispatcher.RemoveListener(AppEvent.Pause, OnAppPause);
             CoroutineProvider.StopCoroutine(ref _coroutine);
             AsyncResolver.CancelCall(ref _callId);
         }
@@ -68,10 +76,14 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             _status = iOSNotificationCenter.GetNotificationSettings().AuthorizationStatus;
             _registerForRemoteNotifications = registerForRemoteNotifications;
 
-            if (_status == AuthorizationStatus.Authorized)
+            if (_status == AuthorizationStatus.Authorized && _registerForRemoteNotifications)
+            {
                 RequestAuthorization();
-            else
-                CompleteInitialization();
+                return;
+            }
+
+            Initialized = true;
+            Dispatcher.Dispatch(NotificationsEvent.Initialized);
         }
 
         private void RequestAuthorization()
@@ -106,17 +118,19 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                     yield return null;
 
                 _coroutine = null;
-                OnAuthorized(request);
+                OnAuthorizationRequestComplete(request);
             }
         }
 
-        private void OnAuthorized(AuthorizationRequest request)
+        private void OnAuthorizationRequestComplete(AuthorizationRequest request)
         {
+            AuthorizationStatus status;
+            
             if (request.Granted)
             {
                 Log.Debug(t => $"Authorized. DeviceToken: {t}", request.DeviceToken);
 
-                _status = AuthorizationStatus.Authorized;
+                status = AuthorizationStatus.Authorized;
                 _deviceToken = request.DeviceToken;
 
                 if (_notificationToSchedule != null)
@@ -137,34 +151,53 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             {
                 Log.Error(e => $"Authorization error: {e}", request.Error);
 
-                _status = AuthorizationStatus.Denied;
+                status = AuthorizationStatus.Denied;
             }
             else
             {
                 Log.Debug("Not authorized. User denied notifications request.");
 
-                _status = AuthorizationStatus.Denied;
+                status = AuthorizationStatus.Denied;
             }
 
-            CompleteInitialization();
-        }
+            if (!Initialized)
+            {
+                Initialized = true;
+                Dispatcher.Dispatch(NotificationsEvent.Initialized);    
+            }
 
-        private void CompleteInitialization()
-        {
-            Initialized = true;
-            Dispatcher.Dispatch(NotificationsEvent.Initialized);
+            TryUpdateStatus(status);
         }
 
         /*
-         * Public.
+         * Status.
          */
-        
+
         public NotificationsAuthorizationStatus GetAuthorizationStatus()
         {
             var status = iOSNotificationCenter.GetNotificationSettings().AuthorizationStatus;
+            TryUpdateStatus(status);
+            return AuthorizationStatusToNotificationsAuthorizationStatus(status);
+        }
 
+        public bool CheckAuthorized()       { return GetAuthorizationStatus() == NotificationsAuthorizationStatus.Authorized; }
+        public bool CheckAuthorizationSet() { return GetAuthorizationStatus() != NotificationsAuthorizationStatus.NotDetermined; }
+
+        private bool TryUpdateStatus(AuthorizationStatus status)
+        {
+            if (_status == status)
+                return false;
+            
             _status = status;
+            
+            var notificationsStatus = AuthorizationStatusToNotificationsAuthorizationStatus(status);
+            Dispatcher.Dispatch(NotificationsEvent.AuthorizationStatusChanged, notificationsStatus);
 
+            return true;
+        }
+        
+        private NotificationsAuthorizationStatus AuthorizationStatusToNotificationsAuthorizationStatus(AuthorizationStatus status)
+        {
             return status switch
             {
                 AuthorizationStatus.NotDetermined => NotificationsAuthorizationStatus.NotDetermined,
@@ -174,11 +207,10 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             };
         }
         
-        public bool CheckAuthorizationSet()
-        {
-            return GetAuthorizationStatus() != NotificationsAuthorizationStatus.NotDetermined;
-        }
-
+        /*
+         * Enabling.
+         */
+        
         public void SetEnabled(bool enabled)
         {
             Enabled = enabled;
@@ -288,6 +320,16 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
             iOSNotificationCenter.ApplicationBadge = 0;
             iOSNotificationCenter.RemoveAllDeliveredNotifications();
+        }
+        
+        /*
+         * Event Handlers.
+         */
+
+        private void OnAppPause(bool paused)
+        {
+            if (Initialized && !paused)
+                GetAuthorizationStatus();
         }
     }
 }

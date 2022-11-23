@@ -5,10 +5,13 @@ namespace Build1.PostMVC.Unity.Notifications
         bool Initialized { get; }
         bool Enabled     { get; }
 
-        void                             Initialize(bool registerForRemoteNotifications);
+        void Initialize(bool registerForRemoteNotifications);
+
         NotificationsAuthorizationStatus GetAuthorizationStatus();
+        bool                             CheckAuthorized();
         bool                             CheckAuthorizationSet();
-        void                             SetEnabled(bool enabled);
+
+        void SetEnabled(bool enabled);
 
         void ScheduleNotification(Notification notification);
 

@@ -51,17 +51,10 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
          * Public.
          */
 
-        public NotificationsAuthorizationStatus GetAuthorizationStatus()
-        {
-            return NotificationsAuthorizationStatus.Authorized;
-        }
-        
-        public bool CheckAuthorizationSet()
-        {
-            // Always true for Android.
-            return true;
-        }
-        
+        public NotificationsAuthorizationStatus GetAuthorizationStatus() { return NotificationsAuthorizationStatus.Authorized; }
+        public bool                             CheckAuthorized()        { return true; }
+        public bool                             CheckAuthorizationSet()  { return true; }
+
         public void SetEnabled(bool enabled)
         {
             Enabled = enabled;
@@ -100,7 +93,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
             AndroidNotificationCenter.SendNotificationWithExplicitID(androidNotification, DefaultChannelId, notification.id);
         }
-        
+
         /*
          * Cancelling.
          */
@@ -108,17 +101,17 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         public void CancelScheduledNotification(Notification notification)
         {
             Log.Debug(i => $"CancelScheduledNotification: {i}", notification.id);
-            
+
             AndroidNotificationCenter.CancelScheduledNotification(notification.id);
         }
-        
+
         public void CancelAllScheduledNotifications()
         {
             Log.Debug("CancelAllScheduledNotifications");
-            
+
             AndroidNotificationCenter.CancelAllScheduledNotifications();
         }
-        
+
         /*
          * Cleaning.
          */
