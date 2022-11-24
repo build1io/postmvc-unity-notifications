@@ -23,13 +23,13 @@ namespace Build1.PostMVC.Unity.Notifications
             #endif
             
             CommandBinder.Bind(AppEvent.Pause)
-                         .TriggerValue(false)
+                         .TriggerCondition(false)
                          .To1<NotificationsClearCommand, NotificationState>(NotificationState.All);
 
             #if UNITY_ANDROID && !UNITY_EDITOR
             
             CommandBinder.Bind(AppEvent.Focus)
-                         .TriggerValue(false)
+                         .TriggerCondition(false)
                          .To1<NotificationsClearCommand, NotificationState>(NotificationState.Displayed);
             
             #endif
