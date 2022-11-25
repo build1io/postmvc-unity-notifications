@@ -12,8 +12,8 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
     {
         private const string AuthorizationSetPlayerPrefsKey = "PostMVC_NotificationsControllerEditor_AuthorizationSet";
 
-        [Log(LogLevel.All)] public ILog             Log        { get; set; }
-        [Inject]            public IEventDispatcher Dispatcher { get; set; }
+        [Log(LogLevel.Warning)] public ILog             Log        { get; set; }
+        [Inject]                public IEventDispatcher Dispatcher { get; set; }
 
         public bool Initialized { get; private set; }
         public bool Enabled     { get; private set; }
@@ -85,17 +85,17 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             if (!CheckAuthorizationSet())
             {
                 Log.Debug("Showing authorization dialog...");
-                
+
                 if (EditorUtility.DisplayDialog("Notifications", "Would you like to allow notifications?", "Allow", "Don't allow"))
                 {
                     UpdateAuthorizationStatus(NotificationsAuthorizationStatus.Authorized);
-                    
+
                     Log.Debug("Authorized");
                 }
                 else
                 {
                     UpdateAuthorizationStatus(NotificationsAuthorizationStatus.Denied);
-                    
+
                     Log.Debug("Denied");
                 }
             }
@@ -109,7 +109,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                 Log.Debug(n => $"Notifications not authorized. Scheduling aborted: {n}", notification);
                 return;
             }
-            
+
             Log.Debug(n => $"Scheduling notification: {n}", notification);
         }
 
@@ -140,7 +140,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         {
             Log.Debug("Cleaning displayed notifications");
         }
-        
+
         /*
          * Private.
          */
@@ -149,12 +149,12 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         {
             if (status == GetAuthorizationStatusStatic())
                 return;
-            
+
             PlayerPrefs.SetInt(AuthorizationSetPlayerPrefsKey, (int)status);
-            
+
             Dispatcher.Dispatch(NotificationsEvent.AuthorizationStatusChanged, status);
         }
-        
+
         /*
          * Static.
          */
@@ -165,7 +165,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                 return NotificationsAuthorizationStatus.NotDetermined;
             return (NotificationsAuthorizationStatus)PlayerPrefs.GetInt(AuthorizationSetPlayerPrefsKey);
         }
-        
+
         public static void ResetAuthorization()
         {
             PlayerPrefs.DeleteKey(AuthorizationSetPlayerPrefsKey);
