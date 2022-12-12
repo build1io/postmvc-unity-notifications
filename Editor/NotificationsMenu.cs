@@ -17,7 +17,7 @@ namespace Build1.PostMVC.Unity.Notifications.Editor
         [MenuItem("Tools/Build1/Notifications/Reset Editor Authorization", false, 2114)]
         public static void Reset()
         {
-            NotificationsControllerEditor.ResetAuthorization();
+            NotificationsControllerEditor.ResetAuthorizationStatusStatic();
             EditorUtility.DisplayDialog("Notifications", "Editor authorization status reset.", "Ok");
         }
     }

@@ -1,14 +1,11 @@
 #if UNITY_ANDROID
 
 using System;
-using Build1.PostMVC.Core.MVCS.Events;
-using Build1.PostMVC.Core.MVCS.Injection;
-using Build1.PostMVC.Unity.App.Modules.Logging;
 using Unity.Notifications.Android;
 
 namespace Build1.PostMVC.Unity.Notifications.Impl
 {
-    internal sealed class NotificationsControllerAndroid : INotificationsController
+    internal sealed class NotificationsControllerAndroid : NotificationsControllerBase
     {
         private const string     DefaultChannelId          = "main";
         private const string     DefaultChannelName        = "Main Channel";
@@ -16,71 +13,50 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         private const Importance DefaultChannelImportance  = Importance.High;
         private const string     DefaultIcon               = "main";
 
-        [Log(LogLevel.Warning)] public ILog             Log        { get; set; }
-        [Inject]                public IEventDispatcher Dispatcher { get; set; }
-
-        public bool Initialized { get; private set; }
-        public bool Enabled     { get; private set; }
+        protected override bool RemoteNotificationsAuthorizationRequired => false;
 
         /*
          * Initialization.
          */
 
-        public void Initialize(bool registerForRemoteNotifications)
+        protected override void OnInitialize()
         {
-            if (Initialized)
-            {
-                Log.Warn("Already initialized");
-                return;
-            }
-
-            var channel = new AndroidNotificationChannel
+            AndroidNotificationCenter.RegisterNotificationChannel(new AndroidNotificationChannel
             {
                 Id = DefaultChannelId,
                 Name = DefaultChannelName,
                 Importance = DefaultChannelImportance,
                 Description = DefaultChannelDescription,
-            };
-            AndroidNotificationCenter.RegisterNotificationChannel(channel);
-
-            Initialized = true;
-            Dispatcher.Dispatch(NotificationsEvent.Initialized);
+            });
+            
+            CompleteInitialization();
         }
 
         /*
-         * Public.
+         * Authorization.
          */
 
-        public NotificationsAuthorizationStatus GetAuthorizationStatus() { return NotificationsAuthorizationStatus.Authorized; }
-        public bool                             CheckAuthorized()        { return true; }
-        public bool                             CheckAuthorizationSet()  { return true; }
-
-        public void SetEnabled(bool enabled)
+        protected override NotificationsAuthorizationStatus GetAuthorizationStatus()
         {
-            Enabled = enabled;
+            return NotificationsAuthorizationStatus.Authorized;
+        }
+
+        protected override void RequestAuthorization(Notification notification)
+        {
+            throw new NotSupportedException("Notifications authorization is not supported on Android devices");
         }
 
         /*
          * Scheduling.
          */
 
-        public void ScheduleNotification(Notification notification)
+        protected override void OnScheduleNotification(Notification notification)
         {
-            if (!Initialized)
+            var androidNotification = new AndroidNotification
             {
-                Log.Error("Notifications not initialized");
-                return;
-            }
-
-            if (!Enabled)
-            {
-                Log.Debug("Notifications disabled");
-                return;
-            }
-
-            var androidNotification = new AndroidNotification();
-            androidNotification.Title = notification.title;
-            androidNotification.Text = notification.text;
+                Title = notification.title,
+                Text = notification.text
+            };
 
             if (notification.largeIcon != null)
                 androidNotification.LargeIcon = notification.largeIcon;
@@ -98,38 +74,22 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
          * Cancelling.
          */
 
-        public void CancelScheduledNotification(Notification notification)
+        protected override void OnCancelScheduledNotification(Notification notification)
         {
-            Log.Debug(i => $"CancelScheduledNotification: {i}", notification.id);
-
             AndroidNotificationCenter.CancelScheduledNotification(notification.id);
         }
 
-        public void CancelAllScheduledNotifications()
+        protected override void OnCancelAllScheduledNotifications()
         {
-            Log.Debug("CancelAllScheduledNotifications");
-
-            AndroidNotificationCenter.CancelAllScheduledNotifications();
+            AndroidNotificationCenter.CancelAllScheduledNotifications();            
         }
-
+        
         /*
          * Cleaning.
          */
 
-        public void CleanDisplayedNotifications()
+        protected override void OnCleanDisplayedNotifications()
         {
-            if (!Initialized)
-            {
-                Log.Error("Notifications not initialized");
-                return;
-            }
-
-            if (!Enabled)
-            {
-                Log.Debug("Notifications disabled");
-                return;
-            }
-
             AndroidNotificationCenter.CancelAllDisplayedNotifications();
         }
     }
