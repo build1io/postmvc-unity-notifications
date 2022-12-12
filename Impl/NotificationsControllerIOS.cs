@@ -30,12 +30,15 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         public void PostConstruct()
         {
             Dispatcher.AddListener(AppEvent.Pause, OnAppPause);
+            Dispatcher.AddListener(NotificationsEvent.AuthorizationStatusChanged, OnAuthorizationStatusChanged);
         }
 
         [PreDestroy]
         public void PreDestroy()
         {
             Dispatcher.RemoveListener(AppEvent.Pause, OnAppPause);
+            Dispatcher.RemoveListener(NotificationsEvent.AuthorizationStatusChanged, OnAuthorizationStatusChanged);
+            
             CoroutineProvider.StopCoroutine(ref _coroutine);
         }
 
@@ -199,9 +202,15 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             AsyncResolver.Resolve(() =>
             {
                 UpdateAuthorizationStatus(GetAuthorizationStatus());
-                
-                // Try requesting tokens if authorization changed on ios
             });
+        }
+
+        private void OnAuthorizationStatusChanged(NotificationsAuthorizationStatus status)
+        {
+            // This ust handle the case when user opens the app with disabled notifications in iOS device settings, then enables notifications and returns to the app.
+            // Tokens must be requested 
+            if (status == NotificationsAuthorizationStatus.Authorized && !TryGetToken(NotificationsTokenType.IOSDeviceToken, out _))
+                RequestAuthorization(null);
         }
     }
 }
