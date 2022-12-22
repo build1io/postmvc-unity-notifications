@@ -1,5 +1,8 @@
 #if UNITY_EDITOR
 
+using System;
+using Build1.PostMVC.Core.MVCS.Injection;
+using Build1.PostMVC.Unity.App.Modules.App;
 using UnityEditor;
 using UnityEngine;
 
@@ -8,9 +11,51 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
     internal sealed class NotificationsControllerEditor : NotificationsControllerBase
     {
         private const string AuthorizationSetPlayerPrefsKey = "PostMVC_NotificationsControllerEditor_AuthorizationSet";
-        
-        protected override bool RemoteNotificationsAuthorizationRequired => false;
 
+        [PostConstruct]
+        public void PostConstruct()
+        {
+            Dispatcher.AddListener(AppEvent.Pause, OnAppPause);
+            Dispatcher.AddListener(NotificationsEvent.AuthorizationStatusChanged, OnAuthorizationStatusChanged);
+        }
+
+        [PreDestroy]
+        public void PreDestroy()
+        {
+            Dispatcher.RemoveListener(AppEvent.Pause, OnAppPause);
+            Dispatcher.RemoveListener(NotificationsEvent.AuthorizationStatusChanged, OnAuthorizationStatusChanged);
+        }
+        
+        /*
+         * Initialization.
+         */
+
+        protected override void OnInitialize(NotificationsAuthorizationStatus status)
+        {
+            switch (status)
+            {
+                case NotificationsAuthorizationStatus.NotDetermined:
+
+                    if (DelayAuthorization)
+                        CompleteInitialization();
+                    else
+                        RequestAuthorization();
+                    
+                    break;
+                
+                case NotificationsAuthorizationStatus.Authorized:
+                    GetFirebaseToken(CompleteInitialization);
+                    break;
+
+                case NotificationsAuthorizationStatus.Denied:
+                    CompleteInitialization();
+                    break;
+                
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(status), status, null);
+            }
+        }
+        
         /*
          * Authorization.
          */
@@ -20,7 +65,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             return GetAuthorizationStatusStatic();
         }
 
-        protected override void RequestAuthorization(Notification notification)
+        protected override void OnRequestAuthorization()
         {
             Log.Debug("Editor simulation. Showing authorization editor dialog...");
 
@@ -28,43 +73,63 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                              ? NotificationsAuthorizationStatus.Authorized
                              : NotificationsAuthorizationStatus.Denied;
 
-            PlayerPrefs.SetInt(AuthorizationSetPlayerPrefsKey, (int)status);
+            SetAuthorizationStatusStatic(status);
             
-            CompleteAuthorization(status, notification);
+            TryUpdateAuthorizationStatus(status, Initialized);
+            
+            OnAuthorizationComplete();
+
+            switch (status)
+            {
+                case NotificationsAuthorizationStatus.Authorized:
+                    GetFirebaseToken(Initialized ? null : CompleteInitialization);
+                    break;
+
+                case NotificationsAuthorizationStatus.Denied:
+                    if (!Initialized)
+                        CompleteInitialization();
+                    break;
+                
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(status), status, null);
+            }
         }
 
         /*
          * Scheduling.
          */
-        
-        protected override void OnScheduleNotification(Notification notification)
-        {
-            Log.Debug(n => $"Editor simulation. Scheduling notification: {n}", notification);
-        }
-        
+
+        protected override void OnScheduleNotification(Notification notification) { }
+
         /*
          * Cancelling.
          */
 
-        protected override void OnCancelScheduledNotification(Notification notification)
-        {
-            Log.Debug(n => $"Editor simulation. Cancelling scheduled notification: {n}", notification);
-        }
+        protected override void OnCancelScheduledNotification(Notification notification) { }
+        protected override void OnCancelAllScheduledNotifications()                      { }
 
-        protected override void OnCancelAllScheduledNotifications()
-        {
-            Log.Debug("Editor simulation. Cancelling scheduled notifications.");
-        }
-        
         /*
          * Cleaning.
          */
 
-        protected override void OnCleanDisplayedNotifications()
+        protected override void OnCleanDisplayedNotifications() { }
+
+        /*
+         * Event Handlers.
+         */
+
+        private void OnAppPause(bool paused)
         {
-            Log.Debug("Editor simulation. Cleaning displayed notifications.");
+            if (!paused && Initialized && !Autorizing) 
+                TryUpdateAuthorizationStatus(GetAuthorizationStatus(), true);
         }
 
+        private void OnAuthorizationStatusChanged(NotificationsAuthorizationStatus status)
+        {
+            if (status == NotificationsAuthorizationStatus.Authorized && !TryGetToken(NotificationsTokenType.FirebaseDeviceToken, out _))
+                GetFirebaseToken(null);
+        }
+        
         /*
          * Static.
          */
@@ -76,6 +141,11 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             return NotificationsAuthorizationStatus.NotDetermined;
         }
 
+        public static void SetAuthorizationStatusStatic(NotificationsAuthorizationStatus status)
+        {
+            PlayerPrefs.SetInt(AuthorizationSetPlayerPrefsKey, (int)status);
+        }
+        
         public static void ResetAuthorizationStatusStatic()
         {
             PlayerPrefs.DeleteKey(AuthorizationSetPlayerPrefsKey);

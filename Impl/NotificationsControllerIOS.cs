@@ -4,7 +4,6 @@ using System;
 using System.Collections;
 using Build1.PostMVC.Core.MVCS.Injection;
 using Build1.PostMVC.Unity.App.Modules.App;
-using Build1.PostMVC.Unity.App.Modules.Async;
 using Build1.PostMVC.Unity.App.Modules.Coroutines;
 using Build1.PostMVC.Unity.App.Modules.InternetReachability;
 using Unity.Notifications.iOS;
@@ -18,11 +17,8 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                                                                  AuthorizationOption.Badge |
                                                                  AuthorizationOption.Sound;
 
-        [Inject] public IAsyncResolver                  AsyncResolver                  { get; set; }
         [Inject] public ICoroutineProvider              CoroutineProvider              { get; set; }
         [Inject] public IInternetReachabilityController InternetReachabilityController { get; set; }
-        
-        protected override bool RemoteNotificationsAuthorizationRequired => true;
 
         private Coroutine _coroutine;
 
@@ -38,34 +34,60 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         {
             Dispatcher.RemoveListener(AppEvent.Pause, OnAppPause);
             Dispatcher.RemoveListener(NotificationsEvent.AuthorizationStatusChanged, OnAuthorizationStatusChanged);
-            
+
             CoroutineProvider.StopCoroutine(ref _coroutine);
+        }
+
+        /*
+         * Initialization.
+         */
+
+        protected override void OnInitialize(NotificationsAuthorizationStatus status)
+        {
+            switch (status)
+            {
+                case NotificationsAuthorizationStatus.NotDetermined:
+
+                    if (DelayAuthorization)
+                        CompleteInitialization();
+                    else
+                        RequestAuthorization();
+
+                    break;
+
+                case NotificationsAuthorizationStatus.Authorized:
+                    GetFirebaseToken(CompleteInitialization);
+                    break;
+
+                case NotificationsAuthorizationStatus.Denied:
+                    CompleteInitialization();
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(status), status, null);
+            }
         }
 
         /*
          * Authorization.
          */
-        
+
         protected override NotificationsAuthorizationStatus GetAuthorizationStatus()
         {
             var status = iOSNotificationCenter.GetNotificationSettings().AuthorizationStatus;
             return AuthorizationStatusToNotificationsAuthorizationStatus(status);
         }
-        
-        /*
-         * TODO: multiple authorization attemps
-         */
 
-        protected override void RequestAuthorization(Notification notification)
+        protected override void OnRequestAuthorization()
         {
             if (!RegisterForRemoteNotifications)
             {
-                CoroutineProvider.StartCoroutine(RequestAuthorizationCoroutine(AuthorizationOptions, false, notification), out _coroutine);
+                CoroutineProvider.StartCoroutine(RequestAuthorizationCoroutine(AuthorizationOptions, false), out _coroutine);
                 return;
             }
 
             Log.Debug("Checking internet connection...");
-            
+
             InternetReachabilityController.Check(reachable =>
             {
                 Log.Debug(log =>
@@ -74,11 +96,11 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                     log.Debug("Requesting authorization...");
                 });
 
-                CoroutineProvider.StartCoroutine(RequestAuthorizationCoroutine(AuthorizationOptions, reachable, notification), out _coroutine);
+                CoroutineProvider.StartCoroutine(RequestAuthorizationCoroutine(AuthorizationOptions, reachable), out _coroutine);
             });
         }
 
-        private IEnumerator RequestAuthorizationCoroutine(AuthorizationOption authorizationOptions, bool registerForRemoteNotifications, Notification notification)
+        private IEnumerator RequestAuthorizationCoroutine(AuthorizationOption authorizationOptions, bool registerForRemoteNotifications)
         {
             Log.Debug((a, r) => $"RequestAuthorizationCoroutine: options: {a} remote: {r}", authorizationOptions, registerForRemoteNotifications);
 
@@ -88,36 +110,55 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                     yield return null;
 
                 _coroutine = null;
-                OnAuthorizationRequestComplete(request, notification);
+                OnAuthorizationRequestComplete(request);
             }
         }
 
-        private void OnAuthorizationRequestComplete(AuthorizationRequest request, Notification notification)
+        private void OnAuthorizationRequestComplete(AuthorizationRequest request)
         {
-            AuthorizationStatus status;
+            Log.Debug("Authorization request complete");
+            
+            NotificationsAuthorizationStatus status;
 
             if (request.Granted)
             {
                 Log.Debug(t => $"Authorized. DeviceToken: {t}", request.DeviceToken);
 
-                status = global::Unity.Notifications.iOS.AuthorizationStatus.Authorized;
-                
+                status = NotificationsAuthorizationStatus.Authorized;
+
                 AddToken(NotificationsTokenType.IOSDeviceToken, request.DeviceToken);
             }
             else if (request.Error != null)
             {
                 Log.Error(e => $"Authorization error: {e}", request.Error);
 
-                status = global::Unity.Notifications.iOS.AuthorizationStatus.Denied;
+                status = NotificationsAuthorizationStatus.Denied;
             }
             else
             {
                 Log.Debug("Not authorized. User denied notifications request.");
 
-                status = global::Unity.Notifications.iOS.AuthorizationStatus.Denied;
+                status = NotificationsAuthorizationStatus.Denied;
             }
 
-            CompleteAuthorization(AuthorizationStatusToNotificationsAuthorizationStatus(status), notification);
+            TryUpdateAuthorizationStatus(status, Initialized);
+            
+            OnAuthorizationComplete();
+
+            switch (status)
+            {
+                case NotificationsAuthorizationStatus.Authorized:
+                    GetFirebaseToken(Initialized ? null : CompleteInitialization);
+                    break;
+
+                case NotificationsAuthorizationStatus.Denied:
+                    if (!Initialized)
+                        CompleteInitialization();
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(status), status, null);
+            }
         }
 
         /*
@@ -164,7 +205,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         {
             iOSNotificationCenter.RemoveAllScheduledNotifications();
         }
-        
+
         /*
          * Cleaning.
          */
@@ -174,11 +215,11 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             iOSNotificationCenter.ApplicationBadge = 0;
             iOSNotificationCenter.RemoveAllDeliveredNotifications();
         }
-        
+
         /*
          * Helpers.
          */
-        
+
         private NotificationsAuthorizationStatus AuthorizationStatusToNotificationsAuthorizationStatus(AuthorizationStatus status)
         {
             return status switch
@@ -196,21 +237,14 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
         private void OnAppPause(bool paused)
         {
-            if (!Initialized || paused) 
-                return;
-            
-            AsyncResolver.Resolve(() =>
-            {
-                UpdateAuthorizationStatus(GetAuthorizationStatus());
-            });
+            if (!paused && Initialized && !Autorizing)
+                TryUpdateAuthorizationStatus(GetAuthorizationStatus(), true);
         }
 
         private void OnAuthorizationStatusChanged(NotificationsAuthorizationStatus status)
         {
-            // This ust handle the case when user opens the app with disabled notifications in iOS device settings, then enables notifications and returns to the app.
-            // Tokens must be requested 
             if (status == NotificationsAuthorizationStatus.Authorized && !TryGetToken(NotificationsTokenType.IOSDeviceToken, out _))
-                RequestAuthorization(null);
+                RequestAuthorization();
         }
     }
 }

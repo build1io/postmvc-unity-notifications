@@ -13,8 +13,6 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         private const Importance DefaultChannelImportance  = Importance.High;
         private const string     DefaultIcon               = "main";
 
-        protected override bool RemoteNotificationsAuthorizationRequired => false;
-
         /*
          * Initialization.
          */
@@ -28,8 +26,6 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                 Importance = DefaultChannelImportance,
                 Description = DefaultChannelDescription,
             });
-            
-            CompleteInitialization();
         }
 
         /*
@@ -43,7 +39,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
         protected override void RequestAuthorization(Notification notification)
         {
-            throw new NotSupportedException("Notifications authorization is not supported on Android devices");
+            CompleteAuthorization(NotificationsAuthorizationStatus.Authorized, notification);
         }
 
         /*
