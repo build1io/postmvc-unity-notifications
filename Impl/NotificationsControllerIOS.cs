@@ -1,4 +1,4 @@
-#if UNITY_IOS
+#if UNITY_IOS || UNITY_EDITOR
 
 using System;
 using System.Collections;
@@ -36,36 +36,6 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             Dispatcher.RemoveListener(NotificationsEvent.AuthorizationStatusChanged, OnAuthorizationStatusChanged);
 
             CoroutineProvider.StopCoroutine(ref _coroutine);
-        }
-
-        /*
-         * Initialization.
-         */
-
-        protected override void OnInitialize(NotificationsAuthorizationStatus status)
-        {
-            switch (status)
-            {
-                case NotificationsAuthorizationStatus.NotDetermined:
-
-                    if (DelayAuthorization)
-                        CompleteInitialization();
-                    else
-                        RequestAuthorization();
-
-                    break;
-
-                case NotificationsAuthorizationStatus.Authorized:
-                    GetFirebaseToken(CompleteInitialization);
-                    break;
-
-                case NotificationsAuthorizationStatus.Denied:
-                    CompleteInitialization();
-                    break;
-
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(status), status, null);
-            }
         }
 
         /*
@@ -110,54 +80,33 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                     yield return null;
 
                 _coroutine = null;
-                OnAuthorizationRequestComplete(request);
-            }
-        }
-
-        private void OnAuthorizationRequestComplete(AuthorizationRequest request)
-        {
-            Log.Debug("Authorization request complete");
+                
+                Log.Debug("Authorization request complete");
             
-            NotificationsAuthorizationStatus status;
+                NotificationsAuthorizationStatus status;
 
-            if (request.Granted)
-            {
-                Log.Debug(t => $"Authorized. DeviceToken: {t}", request.DeviceToken);
+                if (request.Granted)
+                {
+                    Log.Debug(t => $"Authorized. DeviceToken: \'{t}\'", request.DeviceToken);
 
-                status = NotificationsAuthorizationStatus.Authorized;
+                    status = NotificationsAuthorizationStatus.Authorized;
 
-                AddToken(NotificationsTokenType.IOSDeviceToken, request.DeviceToken);
-            }
-            else if (request.Error != null)
-            {
-                Log.Error(e => $"Authorization error: {e}", request.Error);
+                    AddToken(NotificationsTokenType.IOSDeviceToken, request.DeviceToken);
+                }
+                else if (request.Error != null)
+                {
+                    Log.Error(e => $"Authorization error: {e}", request.Error);
 
-                status = NotificationsAuthorizationStatus.Denied;
-            }
-            else
-            {
-                Log.Debug("Not authorized. User denied notifications request.");
+                    status = NotificationsAuthorizationStatus.Denied;
+                }
+                else
+                {
+                    Log.Debug("Not authorized. User denied notifications request.");
 
-                status = NotificationsAuthorizationStatus.Denied;
-            }
-
-            TryUpdateAuthorizationStatus(status, Initialized);
-            
-            OnAuthorizationComplete();
-
-            switch (status)
-            {
-                case NotificationsAuthorizationStatus.Authorized:
-                    GetFirebaseToken(Initialized ? null : CompleteInitialization);
-                    break;
-
-                case NotificationsAuthorizationStatus.Denied:
-                    if (!Initialized)
-                        CompleteInitialization();
-                    break;
-
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(status), status, null);
+                    status = NotificationsAuthorizationStatus.Denied;
+                }
+                
+                OnAuthorizationComplete(status);
             }
         }
 
@@ -237,14 +186,20 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
         private void OnAppPause(bool paused)
         {
-            if (!paused && Initialized && !Autorizing)
-                TryUpdateAuthorizationStatus(GetAuthorizationStatus(), true);
+            if (Initialized && !Autorizing && !paused)
+                TryUpdateAuthorizationStatus(GetAuthorizationStatus());
         }
 
         private void OnAuthorizationStatusChanged(NotificationsAuthorizationStatus status)
         {
-            if (status == NotificationsAuthorizationStatus.Authorized && !TryGetToken(NotificationsTokenType.IOSDeviceToken, out _))
-                RequestAuthorization();
+            if (!Initialized || Autorizing || status != NotificationsAuthorizationStatus.Authorized) 
+                return;
+            
+            if (!TryGetToken(NotificationsTokenType.FirebaseDeviceToken, out _))
+                GetFirebaseToken(null);
+            
+            if (!TryGetToken(NotificationsTokenType.IOSDeviceToken, out _))
+                OnRequestAuthorization();
         }
     }
 }

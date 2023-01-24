@@ -10,8 +10,8 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 {
     public abstract class NotificationsControllerBase : INotificationsController
     {
-        [Log(LogLevel.All)] public ILog             Log        { get; set; }
-        [Inject]            public IEventDispatcher Dispatcher { get; set; }
+        [Log(LogLevel.Warning)] public ILog             Log        { get; set; }
+        [Inject]                public IEventDispatcher Dispatcher { get; set; }
 
         public bool                             Autorizing          { get; private set; }
         public NotificationsAuthorizationStatus AuthorizationStatus => _status;
@@ -19,10 +19,9 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         public bool                             Initialized         { get; protected set; }
         public bool                             Enabled             { get; protected set; }
 
-        protected bool DelayAuthorization             => (_settings & NotificationsSettings.DelayAuthorization) == NotificationsSettings.DelayAuthorization;
-        protected bool RegisterForRemoteNotifications => (_settings & NotificationsSettings.RegisterForRemoteNotifications) == NotificationsSettings.RegisterForRemoteNotifications;
+        protected bool DelayAuthorization             { get; private set; }
+        protected bool RegisterForRemoteNotifications { get; private set; }
 
-        private NotificationsSettings                      _settings;
         private NotificationsAuthorizationStatus           _status;
         private Dictionary<NotificationsTokenType, string> _tokens;
         private List<Notification>                         _notificationsToSchedule;
@@ -48,14 +47,41 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             Log.Debug("Initializing...");
 
             Initializing = true;
+            DelayAuthorization = (settings & NotificationsSettings.DelayAuthorization) == NotificationsSettings.DelayAuthorization;
+            RegisterForRemoteNotifications = (settings & NotificationsSettings.RegisterForRemoteNotifications) == NotificationsSettings.RegisterForRemoteNotifications;
 
-            _settings = settings;
             _status = GetAuthorizationStatus();
+
+            Log.Debug(s => $"Status: {s}", _status);
 
             OnInitialize(_status);
         }
 
-        protected abstract void OnInitialize(NotificationsAuthorizationStatus status);
+        protected virtual void OnInitialize(NotificationsAuthorizationStatus status)
+        {
+            switch (status)
+            {
+                case NotificationsAuthorizationStatus.NotDetermined:
+
+                    if (DelayAuthorization)
+                        CompleteInitialization();
+                    else
+                        RequestAuthorization();
+
+                    break;
+
+                case NotificationsAuthorizationStatus.Authorized:
+                    GetFirebaseToken(CompleteInitialization);
+                    break;
+
+                case NotificationsAuthorizationStatus.Denied:
+                    CompleteInitialization();
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(status), status, null);
+            }
+        }
 
         protected void CompleteInitialization()
         {
@@ -64,9 +90,8 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                 Log.Error("Already initialized");
                 return;
             }
-                
 
-            Log.Debug(s => $"Initialized: {s}", _status);
+            Log.Debug(s => $"Initialized. Status: {s}", _status);
 
             Initialized = true;
             Initializing = false;
@@ -79,7 +104,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
         protected abstract NotificationsAuthorizationStatus GetAuthorizationStatus();
 
-        protected void TryUpdateAuthorizationStatus(NotificationsAuthorizationStatus status, bool dispatchEvent)
+        protected void TryUpdateAuthorizationStatus(NotificationsAuthorizationStatus status)
         {
             if (_status == status)
                 return;
@@ -88,12 +113,17 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
             _status = status;
 
-            if (dispatchEvent)
-                Dispatcher.Dispatch(NotificationsEvent.AuthorizationStatusChanged, status);
+            Dispatcher.Dispatch(NotificationsEvent.AuthorizationStatusChanged, status);
         }
 
-        protected void RequestAuthorization()
+        public void RequestAuthorization()
         {
+            if (AuthorizationStatus != NotificationsAuthorizationStatus.NotDetermined)
+            {
+                Log.Error("Authorization request attempt while current status is determined");
+                return;
+            }
+
             if (Autorizing)
             {
                 Log.Error("Authorization already in progress");
@@ -106,15 +136,42 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
         protected abstract void OnRequestAuthorization();
 
-        protected void OnAuthorizationComplete()
+        protected void OnAuthorizationComplete(NotificationsAuthorizationStatus status)
         {
+            if (!Autorizing)
+                return;
+
+            Log.Error(s => $"Authorization complete: {s}", status);
+
+            TryUpdateAuthorizationStatus(status);
+
             Autorizing = false;
 
             if (_notificationsToSchedule != null)
             {
-                foreach (var notification in _notificationsToSchedule)
-                    ScheduleNotification(notification);
+                // If app is not authorized, we don't bother trying to send notifications.
+                if (status == NotificationsAuthorizationStatus.Authorized)
+                {
+                    foreach (var notification in _notificationsToSchedule)
+                        ScheduleNotification(notification);
+                }
+
                 _notificationsToSchedule = null;
+            }
+
+            switch (status)
+            {
+                case NotificationsAuthorizationStatus.Authorized:
+                    GetFirebaseToken(Initialized ? null : CompleteInitialization);
+                    break;
+
+                case NotificationsAuthorizationStatus.Denied:
+                    if (!Initialized)
+                        CompleteInitialization();
+                    break;
+
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(status), status, null);
             }
         }
 
@@ -149,6 +206,8 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             _tokens ??= new Dictionary<NotificationsTokenType, string>();
             _tokens[type] = token;
 
+            Log.Debug((y, t) => $"Token received. Type: {y} Token: {t}", type, token);
+
             Dispatcher.Dispatch(NotificationsEvent.TokenAdded, type, token);
         }
 
@@ -159,8 +218,6 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             FirebaseMessaging.GetTokenAsync().ContinueWithOnMainThread(task =>
             {
                 var token = task.Result;
-
-                Log.Debug(t => $"Firebase token received: {t}", token);
 
                 AddToken(NotificationsTokenType.FirebaseDeviceToken, token);
 

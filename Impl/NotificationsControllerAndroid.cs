@@ -1,7 +1,12 @@
-#if UNITY_ANDROID
+#if UNITY_ANDROID || UNITY_EDITOR
 
 using System;
+using System.Collections;
+using Build1.PostMVC.Core.MVCS.Injection;
+using Build1.PostMVC.Unity.App.Modules.App;
+using Build1.PostMVC.Unity.App.Modules.Coroutines;
 using Unity.Notifications.Android;
+using UnityEngine;
 
 namespace Build1.PostMVC.Unity.Notifications.Impl
 {
@@ -13,11 +18,31 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         private const Importance DefaultChannelImportance  = Importance.High;
         private const string     DefaultIcon               = "main";
 
+        [Inject] public ICoroutineProvider CoroutineProvider { get; set; }
+        
+        private Coroutine _coroutine;
+
+        [PostConstruct]
+        public void PostConstruct()
+        {
+            Dispatcher.AddListener(AppEvent.Pause, OnAppPause);
+            Dispatcher.AddListener(NotificationsEvent.AuthorizationStatusChanged, OnAuthorizationStatusChanged);
+        }
+
+        [PreDestroy]
+        public void PreDestroy()
+        {
+            Dispatcher.RemoveListener(AppEvent.Pause, OnAppPause);
+            Dispatcher.RemoveListener(NotificationsEvent.AuthorizationStatusChanged, OnAuthorizationStatusChanged);
+            
+            CoroutineProvider.StopCoroutine(ref _coroutine);
+        }
+        
         /*
          * Initialization.
          */
 
-        protected override void OnInitialize()
+        protected override void OnInitialize(NotificationsAuthorizationStatus status)
         {
             AndroidNotificationCenter.RegisterNotificationChannel(new AndroidNotificationChannel
             {
@@ -26,6 +51,8 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                 Importance = DefaultChannelImportance,
                 Description = DefaultChannelDescription,
             });
+            
+            base.OnInitialize(status);
         }
 
         /*
@@ -34,12 +61,26 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
         protected override NotificationsAuthorizationStatus GetAuthorizationStatus()
         {
-            return NotificationsAuthorizationStatus.Authorized;
+            return PermissionStatusToNotificationsAuthorizationStatus(AndroidNotificationCenter.UserPermissionToPost);
         }
 
-        protected override void RequestAuthorization(Notification notification)
+        protected override void OnRequestAuthorization()
         {
-            CompleteAuthorization(NotificationsAuthorizationStatus.Authorized, notification);
+            CoroutineProvider.StartCoroutine(RequestAuthorizationCoroutine(), out _coroutine);
+        }
+        
+        private IEnumerator RequestAuthorizationCoroutine()
+        {
+            Log.Debug("Request authorization...");
+
+            var request = new PermissionRequest();
+            while (request.Status == PermissionStatus.RequestPending)
+                yield return null;
+
+            Log.Debug(r => $"Request authorization complete: {r.Status}", request);
+            
+            _coroutine = null;
+            OnAuthorizationComplete(PermissionStatusToNotificationsAuthorizationStatus(request.Status));
         }
 
         /*
@@ -77,9 +118,9 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
         protected override void OnCancelAllScheduledNotifications()
         {
-            AndroidNotificationCenter.CancelAllScheduledNotifications();            
+            AndroidNotificationCenter.CancelAllScheduledNotifications();
         }
-        
+
         /*
          * Cleaning.
          */
@@ -87,6 +128,43 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         protected override void OnCleanDisplayedNotifications()
         {
             AndroidNotificationCenter.CancelAllDisplayedNotifications();
+        }
+
+        /*
+         * Helpers.
+         */
+
+        private NotificationsAuthorizationStatus PermissionStatusToNotificationsAuthorizationStatus(PermissionStatus status)
+        {
+            return status switch
+            {
+                PermissionStatus.Allowed            => NotificationsAuthorizationStatus.Authorized,
+                PermissionStatus.Denied             => NotificationsAuthorizationStatus.Denied,
+                PermissionStatus.DeniedDontAskAgain => NotificationsAuthorizationStatus.Denied,
+                PermissionStatus.NotRequested       => NotificationsAuthorizationStatus.NotDetermined,
+                PermissionStatus.RequestPending     => NotificationsAuthorizationStatus.NotDetermined,
+                _                                   => throw new ArgumentOutOfRangeException()
+            };
+        }
+        
+        
+        /*
+         * Event Handlers.
+         */
+
+        private void OnAppPause(bool paused)
+        {
+            if (Initialized && !Autorizing && !paused)
+                TryUpdateAuthorizationStatus(GetAuthorizationStatus());
+        }
+
+        private void OnAuthorizationStatusChanged(NotificationsAuthorizationStatus status)
+        {
+            if (!Initialized || Autorizing || status != NotificationsAuthorizationStatus.Authorized) 
+                return;
+            
+            if (!TryGetToken(NotificationsTokenType.FirebaseDeviceToken, out _))
+                GetFirebaseToken(null);
         }
     }
 }
