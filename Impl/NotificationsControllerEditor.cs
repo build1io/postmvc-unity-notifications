@@ -1,172 +1,152 @@
 #if UNITY_EDITOR
 
-using Build1.PostMVC.Core.MVCS.Events;
+using System;
 using Build1.PostMVC.Core.MVCS.Injection;
-using Build1.PostMVC.Unity.App.Modules.Logging;
+using Build1.PostMVC.Unity.App.Modules.App;
 using UnityEditor;
 using UnityEngine;
 
 namespace Build1.PostMVC.Unity.Notifications.Impl
 {
-    internal sealed class NotificationsControllerEditor : INotificationsController
+    internal sealed class NotificationsControllerEditor : NotificationsControllerBase
     {
         private const string AuthorizationSetPlayerPrefsKey = "PostMVC_NotificationsControllerEditor_AuthorizationSet";
 
-        [Log(LogLevel.Warning)] public ILog             Log        { get; set; }
-        [Inject]                public IEventDispatcher Dispatcher { get; set; }
+        [PostConstruct]
+        public void PostConstruct()
+        {
+            Dispatcher.AddListener(AppEvent.Pause, OnAppPause);
+            Dispatcher.AddListener(NotificationsEvent.AuthorizationStatusChanged, OnAuthorizationStatusChanged);
+        }
 
-        public bool Initialized { get; private set; }
-        public bool Enabled     { get; private set; }
-
+        [PreDestroy]
+        public void PreDestroy()
+        {
+            Dispatcher.RemoveListener(AppEvent.Pause, OnAppPause);
+            Dispatcher.RemoveListener(NotificationsEvent.AuthorizationStatusChanged, OnAuthorizationStatusChanged);
+        }
+        
         /*
          * Initialization.
          */
 
-        public void Initialize(bool registerForRemoteNotifications)
+        protected override void OnInitialize(NotificationsAuthorizationStatus status)
         {
-            if (Initialized)
+            switch (status)
             {
-                Log.Warn("Already initialized");
-                return;
+                case NotificationsAuthorizationStatus.NotDetermined:
+
+                    if (DelayAuthorization)
+                        CompleteInitialization();
+                    else
+                        RequestAuthorization();
+                    
+                    break;
+                
+                case NotificationsAuthorizationStatus.Authorized:
+                    GetFirebaseToken(CompleteInitialization);
+                    break;
+
+                case NotificationsAuthorizationStatus.Denied:
+                    CompleteInitialization();
+                    break;
+                
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(status), status, null);
             }
-
-            Log.Debug("Initialized");
-
-            Initialized = true;
-            Dispatcher.Dispatch(NotificationsEvent.Initialized);
         }
-
+        
         /*
-         * Public.
+         * Authorization.
          */
 
-        public NotificationsAuthorizationStatus GetAuthorizationStatus()
+        protected override NotificationsAuthorizationStatus GetAuthorizationStatus()
         {
             return GetAuthorizationStatusStatic();
         }
 
-        public bool CheckAuthorized()
+        protected override void OnRequestAuthorization()
         {
-            return GetAuthorizationStatusStatic() == NotificationsAuthorizationStatus.Authorized;
-        }
+            Log.Debug("Editor simulation. Showing authorization editor dialog...");
 
-        public bool CheckAuthorizationSet()
-        {
-            if (!PlayerPrefs.HasKey(AuthorizationSetPlayerPrefsKey))
-                return false;
+            var status = EditorUtility.DisplayDialog("Notifications", "Would you like to allow notifications?", "Allow", "Don't allow")
+                             ? NotificationsAuthorizationStatus.Authorized
+                             : NotificationsAuthorizationStatus.Denied;
 
-            var value = (NotificationsAuthorizationStatus)PlayerPrefs.GetInt(AuthorizationSetPlayerPrefsKey);
-            return value != NotificationsAuthorizationStatus.NotDetermined;
-        }
+            SetAuthorizationStatusStatic(status);
+            
+            TryUpdateAuthorizationStatus(status, Initialized);
+            
+            OnAuthorizationComplete();
 
-        public void SetEnabled(bool enabled)
-        {
-            Enabled = enabled;
+            switch (status)
+            {
+                case NotificationsAuthorizationStatus.Authorized:
+                    GetFirebaseToken(Initialized ? null : CompleteInitialization);
+                    break;
+
+                case NotificationsAuthorizationStatus.Denied:
+                    if (!Initialized)
+                        CompleteInitialization();
+                    break;
+                
+                default:
+                    throw new ArgumentOutOfRangeException(nameof(status), status, null);
+            }
         }
 
         /*
          * Scheduling.
          */
 
-        public void ScheduleNotification(Notification notification)
-        {
-            if (!Initialized)
-            {
-                Log.Warn("Notification not initialized.");
-                return;
-            }
-
-            if (!Enabled)
-            {
-                Log.Debug("Notifications disabled.");
-                return;
-            }
-
-            if (!CheckAuthorizationSet())
-            {
-                Log.Debug("Showing authorization dialog...");
-
-                if (EditorUtility.DisplayDialog("Notifications", "Would you like to allow notifications?", "Allow", "Don't allow"))
-                {
-                    UpdateAuthorizationStatus(NotificationsAuthorizationStatus.Authorized);
-
-                    Log.Debug("Authorized");
-                }
-                else
-                {
-                    UpdateAuthorizationStatus(NotificationsAuthorizationStatus.Denied);
-
-                    Log.Debug("Denied");
-                }
-            }
-            else
-            {
-                Log.Debug("Notifications status determined");
-            }
-
-            if (!CheckAuthorized())
-            {
-                Log.Debug(n => $"Notifications not authorized. Scheduling aborted: {n}", notification);
-                return;
-            }
-
-            Log.Debug(n => $"Scheduling notification: {n}", notification);
-        }
+        protected override void OnScheduleNotification(Notification notification) { }
 
         /*
          * Cancelling.
          */
 
-        public void CancelScheduledNotification(string id)
-        {
-            Log.Debug(i => $"Cancelling scheduled notification: {i}", id);
-        }
-
-        public void CancelScheduledNotification(Notification notification)
-        {
-            Log.Debug(i => $"Cancelling scheduled notification: {i}", notification.id);
-        }
-
-        public void CancelAllScheduledNotifications()
-        {
-            Log.Debug("Cancelling scheduled notifications");
-        }
+        protected override void OnCancelScheduledNotification(Notification notification) { }
+        protected override void OnCancelAllScheduledNotifications()                      { }
 
         /*
          * Cleaning.
          */
 
-        public void CleanDisplayedNotifications()
-        {
-            Log.Debug("Cleaning displayed notifications");
-        }
+        protected override void OnCleanDisplayedNotifications() { }
 
         /*
-         * Private.
+         * Event Handlers.
          */
 
-        private void UpdateAuthorizationStatus(NotificationsAuthorizationStatus status)
+        private void OnAppPause(bool paused)
         {
-            if (status == GetAuthorizationStatusStatic())
-                return;
-
-            PlayerPrefs.SetInt(AuthorizationSetPlayerPrefsKey, (int)status);
-
-            Dispatcher.Dispatch(NotificationsEvent.AuthorizationStatusChanged, status);
+            if (!paused && Initialized && !Autorizing) 
+                TryUpdateAuthorizationStatus(GetAuthorizationStatus(), true);
         }
 
+        private void OnAuthorizationStatusChanged(NotificationsAuthorizationStatus status)
+        {
+            if (status == NotificationsAuthorizationStatus.Authorized && !TryGetToken(NotificationsTokenType.FirebaseDeviceToken, out _))
+                GetFirebaseToken(null);
+        }
+        
         /*
          * Static.
          */
 
         public static NotificationsAuthorizationStatus GetAuthorizationStatusStatic()
         {
-            if (!PlayerPrefs.HasKey(AuthorizationSetPlayerPrefsKey))
-                return NotificationsAuthorizationStatus.NotDetermined;
-            return (NotificationsAuthorizationStatus)PlayerPrefs.GetInt(AuthorizationSetPlayerPrefsKey);
+            if (PlayerPrefs.HasKey(AuthorizationSetPlayerPrefsKey))
+                return (NotificationsAuthorizationStatus)PlayerPrefs.GetInt(AuthorizationSetPlayerPrefsKey);
+            return NotificationsAuthorizationStatus.NotDetermined;
         }
 
-        public static void ResetAuthorization()
+        public static void SetAuthorizationStatusStatic(NotificationsAuthorizationStatus status)
+        {
+            PlayerPrefs.SetInt(AuthorizationSetPlayerPrefsKey, (int)status);
+        }
+        
+        public static void ResetAuthorizationStatusStatic()
         {
             PlayerPrefs.DeleteKey(AuthorizationSetPlayerPrefsKey);
         }
