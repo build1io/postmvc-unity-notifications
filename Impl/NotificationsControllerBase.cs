@@ -141,7 +141,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             if (!Autorizing)
                 return;
 
-            Log.Error(s => $"Authorization complete: {s}", status);
+            Log.Debug(s => $"Authorization complete: {s}", status);
 
             TryUpdateAuthorizationStatus(status);
 
