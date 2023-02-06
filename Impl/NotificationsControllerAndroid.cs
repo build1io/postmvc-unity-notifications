@@ -19,7 +19,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         private const string     DefaultIcon               = "main";
 
         [Inject] public ICoroutineProvider CoroutineProvider { get; set; }
-        
+
         private Coroutine _coroutine;
 
         [PostConstruct]
@@ -44,6 +44,14 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
         protected override void OnInitialize(NotificationsAuthorizationStatus status)
         {
+            if (status == NotificationsAuthorizationStatus.Authorized)
+                RegisterNotificationChannel();
+            
+            base.OnInitialize(status);
+        }
+
+        private void RegisterNotificationChannel()
+        {
             AndroidNotificationCenter.RegisterNotificationChannel(new AndroidNotificationChannel
             {
                 Id = DefaultChannelId,
@@ -51,8 +59,6 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                 Importance = DefaultChannelImportance,
                 Description = DefaultChannelDescription,
             });
-            
-            base.OnInitialize(status);
         }
 
         /*
@@ -80,7 +86,12 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             Log.Debug(r => $"Request authorization complete: {r.Status}", request);
             
             _coroutine = null;
-            OnAuthorizationComplete(PermissionStatusToNotificationsAuthorizationStatus(request.Status));
+
+            var status = PermissionStatusToNotificationsAuthorizationStatus(request.Status);
+            if (status == NotificationsAuthorizationStatus.Authorized)
+                RegisterNotificationChannel();
+            
+            OnAuthorizationComplete(status);
         }
 
         /*
