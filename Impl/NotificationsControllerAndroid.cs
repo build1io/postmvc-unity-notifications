@@ -44,6 +44,8 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
         protected override void OnInitialize(NotificationsAuthorizationStatus status)
         {
+            AndroidNotificationCenter.Initialize();
+            
             if (status == NotificationsAuthorizationStatus.Authorized)
                 RegisterNotificationChannel();
             
@@ -52,13 +54,15 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
         private void RegisterNotificationChannel()
         {
-            AndroidNotificationCenter.RegisterNotificationChannel(new AndroidNotificationChannel
+            var channel = new AndroidNotificationChannel(DefaultChannelId, DefaultChannelName, DefaultChannelDescription, DefaultChannelImportance)
             {
-                Id = DefaultChannelId,
-                Name = DefaultChannelName,
-                Importance = DefaultChannelImportance,
-                Description = DefaultChannelDescription,
-            });
+                CanBypassDnd = false,
+                CanShowBadge = true,
+                EnableLights = true,
+                EnableVibration = true,
+                LockScreenVisibility = LockScreenVisibility.Public
+            };
+            AndroidNotificationCenter.RegisterNotificationChannel(channel);
         }
 
         /*

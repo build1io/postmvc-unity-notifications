@@ -176,6 +176,8 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                 global::Unity.Notifications.iOS.AuthorizationStatus.NotDetermined => NotificationsAuthorizationStatus.NotDetermined,
                 global::Unity.Notifications.iOS.AuthorizationStatus.Denied        => NotificationsAuthorizationStatus.Denied,
                 global::Unity.Notifications.iOS.AuthorizationStatus.Authorized    => NotificationsAuthorizationStatus.Authorized,
+                global::Unity.Notifications.iOS.AuthorizationStatus.Provisional   => NotificationsAuthorizationStatus.Authorized,
+                global::Unity.Notifications.iOS.AuthorizationStatus.Ephemeral     => NotificationsAuthorizationStatus.Authorized,
                 _                                                                 => throw new ArgumentOutOfRangeException()
             };
         }
