@@ -37,6 +37,26 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
             CoroutineProvider.StopCoroutine(ref _coroutine);
         }
+        
+        /*
+         * Initializing.
+         */
+
+        protected override void OnInitialize(NotificationsAuthorizationStatus status)
+        {
+            if (status != NotificationsAuthorizationStatus.Authorized)
+            {
+                base.OnInitialize(status);
+                return;
+            }
+
+            // If user already authorized notifications, we request authorization anyway.
+            // It runs silently and loads an Apple Push Notifications Token. It might be used by other components.
+            RequestAuthorization(() =>
+            {
+                base.OnInitialize(status);
+            });
+        }
 
         /*
          * Authorization.
@@ -50,9 +70,17 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
         protected override void OnRequestAuthorization()
         {
+            RequestAuthorization(() =>
+            {
+                OnAuthorizationComplete(GetAuthorizationStatus());
+            });
+        }
+        
+        private void RequestAuthorization(Action onComplete)
+        {
             if (!RegisterForRemoteNotifications)
             {
-                CoroutineProvider.StartCoroutine(RequestAuthorizationCoroutine(AuthorizationOptions, false), out _coroutine);
+                RequestAuthorizationImpl(false, onComplete);
                 return;
             }
 
@@ -66,11 +94,16 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                     log.Debug("Requesting authorization...");
                 });
 
-                CoroutineProvider.StartCoroutine(RequestAuthorizationCoroutine(AuthorizationOptions, reachable), out _coroutine);
+                RequestAuthorizationImpl(reachable, onComplete);
             });
         }
 
-        private IEnumerator RequestAuthorizationCoroutine(AuthorizationOption authorizationOptions, bool registerForRemoteNotifications)
+        private void RequestAuthorizationImpl(bool registerForRemoteNotifications, Action onComplete)
+        {
+            CoroutineProvider.StartCoroutine(RequestAuthorizationCoroutine(AuthorizationOptions, registerForRemoteNotifications, onComplete), out _coroutine);
+        }
+        
+        private IEnumerator RequestAuthorizationCoroutine(AuthorizationOption authorizationOptions, bool registerForRemoteNotifications, Action onComplete)
         {
             Log.Debug((a, r) => $"RequestAuthorizationCoroutine: options: {a} remote: {r}", authorizationOptions, registerForRemoteNotifications);
 
@@ -83,30 +116,22 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                 
                 Log.Debug("Authorization request complete");
             
-                NotificationsAuthorizationStatus status;
-
                 if (request.Granted)
                 {
                     Log.Debug(t => $"Authorized. DeviceToken: \'{t}\'", request.DeviceToken);
-
-                    status = NotificationsAuthorizationStatus.Authorized;
 
                     AddToken(NotificationsTokenType.IOSDeviceToken, request.DeviceToken);
                 }
                 else if (request.Error != null)
                 {
                     Log.Error(e => $"Authorization error: {e}", request.Error);
-
-                    status = NotificationsAuthorizationStatus.Denied;
                 }
                 else
                 {
                     Log.Debug("Not authorized. User denied notifications request.");
-
-                    status = NotificationsAuthorizationStatus.Denied;
                 }
                 
-                OnAuthorizationComplete(status);
+                onComplete();
             }
         }
 
