@@ -104,16 +104,16 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
         protected abstract NotificationsAuthorizationStatus GetAuthorizationStatus();
 
-        protected void TryUpdateAuthorizationStatus(NotificationsAuthorizationStatus status)
+        protected bool TryUpdateAuthorizationStatus(NotificationsAuthorizationStatus status)
         {
             if (_status == status)
-                return;
+                return false;
 
             Log.Debug(s => $"Authorization status updated: {s}", status);
 
             _status = status;
-
             Dispatcher.Dispatch(NotificationsEvent.AuthorizationStatusChanged, status);
+            return true;
         }
 
         public void RequestAuthorization()
@@ -143,7 +143,8 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
             Log.Debug(s => $"Authorization complete: {s}", status);
 
-            TryUpdateAuthorizationStatus(status);
+            if (!TryUpdateAuthorizationStatus(status))
+                Dispatcher.Dispatch(NotificationsEvent.AuthorizationCanceled);
 
             Autorizing = false;
 
@@ -166,6 +167,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                     break;
 
                 case NotificationsAuthorizationStatus.Denied:
+                case NotificationsAuthorizationStatus.NotDetermined:
                     if (!Initialized)
                         CompleteInitialization();
                     break;

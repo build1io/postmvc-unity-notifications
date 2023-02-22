@@ -37,10 +37,19 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         protected override void OnRequestAuthorization()
         {
             Log.Debug("Editor simulation. Showing authorization editor dialog...");
+            
+            var option = EditorUtility.DisplayDialogComplex("Notifications",
+                                                            "Would you like to allow notifications?",
+                                                            "Allow",
+                                                            "Cancel",
+                                                            "Don't allow");
 
-            var status = EditorUtility.DisplayDialog("Notifications", "Would you like to allow notifications?", "Allow", "Don't allow")
-                             ? NotificationsAuthorizationStatus.Authorized
-                             : NotificationsAuthorizationStatus.Denied;
+            var status = option switch
+            {
+                0 => NotificationsAuthorizationStatus.Authorized,
+                2 => NotificationsAuthorizationStatus.Denied,
+                _ => NotificationsAuthorizationStatus.NotDetermined
+            };
 
             SetAuthorizationStatusStatic(status);
             OnAuthorizationComplete(status);

@@ -221,12 +221,16 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         {
             if (!Initialized || Autorizing || status != NotificationsAuthorizationStatus.Authorized) 
                 return;
-            
-            if (!TryGetToken(NotificationsTokenType.FirebaseDeviceToken, out _))
-                GetFirebaseToken(null);
-            
+
             if (!TryGetToken(NotificationsTokenType.IOSDeviceToken, out _))
-                OnRequestAuthorization();
+            {
+                // To load APN token.
+                RequestAuthorization(() =>
+                {
+                    if (!TryGetToken(NotificationsTokenType.FirebaseDeviceToken, out _))
+                        GetFirebaseToken(null);
+                });
+            }
         }
     }
 }
