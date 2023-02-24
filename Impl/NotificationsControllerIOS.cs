@@ -134,6 +134,16 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                 onComplete();
             }
         }
+        
+        /*
+         * Tokens.
+         */
+
+        protected override bool CheckFirebaseTokenLoadingAllowed()
+        {
+            // Firebase token loading allowed only if Apple token is loaded.
+            return TryGetToken(NotificationsTokenType.IOSDeviceToken, out _);
+        }
 
         /*
          * Scheduling.

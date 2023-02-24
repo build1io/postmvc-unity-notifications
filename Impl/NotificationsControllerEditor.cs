@@ -54,6 +54,15 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             SetAuthorizationStatusStatic(status);
             OnAuthorizationComplete(status);
         }
+        
+        /*
+         * Tokens.
+         */
+
+        protected override bool CheckFirebaseTokenLoadingAllowed()
+        {
+            return true;
+        }
 
         /*
          * Scheduling.

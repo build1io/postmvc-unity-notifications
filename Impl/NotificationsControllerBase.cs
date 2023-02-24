@@ -213,8 +213,17 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             Dispatcher.Dispatch(NotificationsEvent.TokenAdded, type, token);
         }
 
+        protected abstract bool CheckFirebaseTokenLoadingAllowed();
+
         protected void GetFirebaseToken(Action onComplete)
         {
+            if (!CheckFirebaseTokenLoadingAllowed())
+            {
+                Log.Warn("Firebase token loading not allowed");
+                onComplete?.Invoke();
+                return;
+            }
+
             Log.Debug("Requesting Firebase notifications token...");
 
             FirebaseMessaging.GetTokenAsync().ContinueWithOnMainThread(task =>
