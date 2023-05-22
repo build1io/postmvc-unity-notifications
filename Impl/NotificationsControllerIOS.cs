@@ -110,7 +110,10 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             using (var request = new AuthorizationRequest(authorizationOptions, registerForRemoteNotifications))
             {
                 while (!request.IsFinished)
+                {
+                    Log.Debug("Authorization request pending...");
                     yield return null;
+                }
 
                 _coroutine = null;
                 
