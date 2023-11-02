@@ -131,6 +131,9 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             }
 
             Autorizing = true;
+            
+            Dispatcher.Dispatch(NotificationsEvent.AuthorizationRequesting);
+            
             OnRequestAuthorization();
         }
 
