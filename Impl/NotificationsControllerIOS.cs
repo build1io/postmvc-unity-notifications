@@ -156,7 +156,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         {
             var timeTrigger = new iOSNotificationTimeIntervalTrigger
             {
-                TimeInterval = new TimeSpan(0, 0, notification.TimeoutSeconds),
+                TimeInterval = new TimeSpan(0, 0, notification.timeoutSeconds),
                 Repeats = false
             };
 
@@ -168,7 +168,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                 Subtitle = notification.subTitle,
                 Body = notification.text,
 
-                ShowInForeground = notification.ShowInForeground,
+                ShowInForeground = notification.showInForeground,
                 ForegroundPresentationOption = PresentationOption.Alert | PresentationOption.Badge | PresentationOption.Sound,
                 Badge = 1,
                 CategoryIdentifier = "default_category",

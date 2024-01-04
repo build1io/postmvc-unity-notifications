@@ -17,7 +17,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         public NotificationsAuthorizationStatus AuthorizationStatus => _status;
         public bool                             Initializing        { get; protected set; }
         public bool                             Initialized         { get; protected set; }
-        public bool                             Enabled             { get; protected set; }
+        public bool                             Enabled             { get; protected set; } = true; // Enabled by default to make notifications work after initialization.
 
         protected bool DelayAuthorization             { get; private set; }
         protected bool RegisterForRemoteNotifications { get; private set; }

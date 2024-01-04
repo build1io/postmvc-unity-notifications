@@ -5,15 +5,15 @@ namespace Build1.PostMVC.Unity.Notifications
         public readonly int    id;
         public readonly string idString;
 
-        public readonly string title;
-        public readonly string subTitle;
-        public readonly string text;
+        public string title;
+        public string subTitle;
+        public string text;
 
-        public readonly string smallIcon;
-        public readonly string largeIcon;
+        public string smallIcon;
+        public string largeIcon;
 
-        public int  TimeoutSeconds   { get; private set; }
-        public bool ShowInForeground { get; private set; } = true;
+        public int  timeoutSeconds;
+        public bool showInForeground = true;
 
         public Notification(int id, string title, string text)
         {
@@ -30,7 +30,7 @@ namespace Build1.PostMVC.Unity.Notifications
             this.title = title;
             this.text = text;
 
-            TimeoutSeconds = timeoutSeconds;
+            this.timeoutSeconds = timeoutSeconds;
         }
 
         public Notification(int id, string title, string subTitle, string text, string smallIcon, string largeIcon, int timeoutSeconds)
@@ -43,24 +43,67 @@ namespace Build1.PostMVC.Unity.Notifications
             this.smallIcon = smallIcon;
             this.largeIcon = largeIcon;
 
-            TimeoutSeconds = timeoutSeconds;
+            this.timeoutSeconds = timeoutSeconds;
+        }
+        
+        public Notification(int id, string title, string subTitle, string text, string smallIcon, string largeIcon, int timeoutSeconds, bool showInForeground)
+        {
+            this.id = id;
+            this.idString = id.ToString();
+            this.title = title;
+            this.subTitle = subTitle;
+            this.text = text;
+            this.smallIcon = smallIcon;
+            this.largeIcon = largeIcon;
+            this.timeoutSeconds = timeoutSeconds;
+            this.showInForeground = showInForeground;
+        }
+        
+        public Notification SetTitle(string value)
+        {
+            title = value;
+            return this;
+        }
+        
+        public Notification SetSubTitle(string value)
+        {
+            subTitle = value;
+            return this;
         }
 
-        public Notification SetTimeout(int timeoutSeconds)
+        public Notification SetText(string value)
         {
-            TimeoutSeconds = timeoutSeconds;
+            text = value;
+            return this;
+        }
+        
+        public Notification SetSmallIcon(string value)
+        {
+            smallIcon = value;
+            return this;
+        }
+        
+        public Notification SetLargeIcon(string value)
+        {
+            largeIcon = value;
+            return this;
+        }
+        
+        public Notification SetTimeout(int value)
+        {
+            timeoutSeconds = value;
             return this;
         }
 
         public Notification SetShowInForeground(bool value)
         {
-            ShowInForeground = value;
+            showInForeground = value;
             return this;
         }
 
         public Notification Copy()
         {
-            return new Notification(id, title, subTitle, text, smallIcon, largeIcon, TimeoutSeconds);
+            return new Notification(id, title, subTitle, text, smallIcon, largeIcon, timeoutSeconds, showInForeground);
         }
 
         public override string ToString()

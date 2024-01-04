@@ -126,7 +126,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             else
                 androidNotification.LargeIcon = DefaultIcon;
 
-            androidNotification.FireTime = DateTime.Now.AddSeconds(notification.TimeoutSeconds);
+            androidNotification.FireTime = DateTime.Now.AddSeconds(notification.timeoutSeconds);
 
             AndroidNotificationCenter.SendNotificationWithExplicitID(androidNotification, DefaultChannelId, notification.id);
         }
