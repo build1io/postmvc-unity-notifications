@@ -2,113 +2,100 @@ namespace Build1.PostMVC.Unity.Notifications
 {
     public sealed class Notification
     {
-        public readonly int    id;
-        public readonly string idString;
+        public readonly int id;
 
-        public string title;
-        public string subTitle;
-        public string text;
+        public string Title    { get; set; }
+        public string SubTitle { get; set; }
+        public string Text     { get; set; }
 
-        public string smallIcon;
-        public string largeIcon;
+        public string IconSmall { get; set; }
+        public string IconLarge { get; set; }
 
-        public int  timeoutSeconds;
-        public bool showInForeground = true;
+        public string IOSThreadId    { get; set; }
+        public string AndroidGroupId { get; set; }
+
+        public int  TimeoutSeconds   { get; set; }
+        public bool ShowInForeground { get; set; } = true;
 
         public Notification(int id, string title, string text)
         {
             this.id = id;
-            this.idString = id.ToString();
-            this.title = title;
-            this.text = text;
+
+            Title = title;
+            Text = text;
         }
 
-        public Notification(int id, string title, string text, int timeoutSeconds)
-        {
-            this.id = id;
-            this.idString = id.ToString();
-            this.title = title;
-            this.text = text;
-
-            this.timeoutSeconds = timeoutSeconds;
-        }
-
-        public Notification(int id, string title, string subTitle, string text, string smallIcon, string largeIcon, int timeoutSeconds)
-        {
-            this.id = id;
-            this.idString = id.ToString();
-            this.title = title;
-            this.subTitle = subTitle;
-            this.text = text;
-            this.smallIcon = smallIcon;
-            this.largeIcon = largeIcon;
-
-            this.timeoutSeconds = timeoutSeconds;
-        }
-        
-        public Notification(int id, string title, string subTitle, string text, string smallIcon, string largeIcon, int timeoutSeconds, bool showInForeground)
-        {
-            this.id = id;
-            this.idString = id.ToString();
-            this.title = title;
-            this.subTitle = subTitle;
-            this.text = text;
-            this.smallIcon = smallIcon;
-            this.largeIcon = largeIcon;
-            this.timeoutSeconds = timeoutSeconds;
-            this.showInForeground = showInForeground;
-        }
-        
         public Notification SetTitle(string value)
         {
-            title = value;
+            Title = value;
             return this;
         }
-        
+
         public Notification SetSubTitle(string value)
         {
-            subTitle = value;
+            SubTitle = value;
             return this;
         }
 
         public Notification SetText(string value)
         {
-            text = value;
+            Text = value;
             return this;
         }
-        
-        public Notification SetSmallIcon(string value)
+
+        public Notification SetIconSmall(string value)
         {
-            smallIcon = value;
+            IconSmall = value;
             return this;
         }
-        
-        public Notification SetLargeIcon(string value)
+
+        public Notification SetIconLarge(string value)
         {
-            largeIcon = value;
+            IconLarge = value;
             return this;
         }
-        
+
+        public Notification SetIOSThreadId(string value)
+        {
+            IOSThreadId = value;
+            return this;
+        }
+
+        public Notification SetAndroidGroupId(string value)
+        {
+            AndroidGroupId = value;
+            return this;
+        }
+
         public Notification SetTimeout(int value)
         {
-            timeoutSeconds = value;
+            TimeoutSeconds = value;
             return this;
         }
 
         public Notification SetShowInForeground(bool value)
         {
-            showInForeground = value;
+            ShowInForeground = value;
             return this;
         }
 
         public Notification Copy()
         {
-            return new Notification(id, title, subTitle, text, smallIcon, largeIcon, timeoutSeconds, showInForeground);
+            return new Notification(id, Title, Text)
+            {
+                SubTitle = SubTitle,
+                IconLarge = IconLarge,
+                IconSmall = IconSmall,
+                IOSThreadId = IOSThreadId,
+                AndroidGroupId = AndroidGroupId,
+                TimeoutSeconds = TimeoutSeconds,
+                ShowInForeground = ShowInForeground
+            };
         }
 
         public override string ToString()
         {
-            return $"[\"{title}\", \"{text}\"]";
+            return $"[\"{Title}\", \"{Text}\"]";
         }
     }
 }

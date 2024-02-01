@@ -115,18 +115,21 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         {
             var androidNotification = new AndroidNotification
             {
-                Title = notification.title,
-                Text = notification.text
+                Title = notification.Title,
+                Text = notification.Text
             };
 
-            if (notification.largeIcon != null)
-                androidNotification.LargeIcon = notification.largeIcon;
-            else if (notification.smallIcon != null)
-                androidNotification.SmallIcon = notification.smallIcon;
+            if (string.IsNullOrWhiteSpace(notification.AndroidGroupId))
+                androidNotification.Group = notification.AndroidGroupId;
+
+            if (notification.IconLarge != null)
+                androidNotification.LargeIcon = notification.IconLarge;
+            else if (notification.IconSmall != null)
+                androidNotification.SmallIcon = notification.IconSmall;
             else
                 androidNotification.LargeIcon = DefaultIcon;
 
-            androidNotification.FireTime = DateTime.Now.AddSeconds(notification.timeoutSeconds);
+            androidNotification.FireTime = DateTime.Now.AddSeconds(notification.TimeoutSeconds);
 
             AndroidNotificationCenter.SendNotificationWithExplicitID(androidNotification, DefaultChannelId, notification.id);
         }

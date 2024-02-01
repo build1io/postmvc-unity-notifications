@@ -156,23 +156,23 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         {
             var timeTrigger = new iOSNotificationTimeIntervalTrigger
             {
-                TimeInterval = new TimeSpan(0, 0, notification.timeoutSeconds),
+                TimeInterval = new TimeSpan(0, 0, notification.TimeoutSeconds),
                 Repeats = false
             };
 
             var iOSNotification = new iOSNotification
             {
-                Identifier = notification.idString,
+                Identifier = notification.id.ToString(),
 
-                Title = notification.title,
-                Subtitle = notification.subTitle,
-                Body = notification.text,
+                Title = notification.Title,
+                Subtitle = notification.SubTitle,
+                Body = notification.Text,
 
-                ShowInForeground = notification.showInForeground,
+                ShowInForeground = notification.ShowInForeground,
                 ForegroundPresentationOption = PresentationOption.Alert | PresentationOption.Badge | PresentationOption.Sound,
                 Badge = 1,
                 CategoryIdentifier = "default_category",
-                ThreadIdentifier = "default_thread",
+                ThreadIdentifier = string.IsNullOrWhiteSpace(notification.IOSThreadId) ? "default_thread" : notification.IOSThreadId,
                 Trigger = timeTrigger
             };
 
@@ -185,7 +185,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
         protected override void OnCancelScheduledNotification(Notification notification)
         {
-            iOSNotificationCenter.RemoveScheduledNotification(notification.idString);
+            iOSNotificationCenter.RemoveScheduledNotification(notification.id.ToString());
         }
 
         protected override void OnCancelAllScheduledNotifications()
