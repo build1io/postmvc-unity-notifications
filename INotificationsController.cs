@@ -11,6 +11,7 @@ namespace Build1.PostMVC.Unity.Notifications
         void RequestAuthorization();
 
         void SetEnabled(bool enabled);
+        void SetAppBadgeCounter(int number);
 
         void ScheduleNotification(Notification notification);
 

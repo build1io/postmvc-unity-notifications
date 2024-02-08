@@ -190,6 +190,12 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
             Enabled = enabled;
         }
+        
+        /*
+         * App badge.
+         */
+        
+        public abstract void SetAppBadgeCounter(int number);
 
         /*
          * Tokens.

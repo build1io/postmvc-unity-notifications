@@ -149,6 +149,17 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         }
 
         /*
+         * App badge.
+         */
+
+        public override void SetAppBadgeCounter(int number)
+        {
+            Log.Debug(a => $"SetAppBadgeCounter: {a}", number);
+            
+            iOSNotificationCenter.ApplicationBadge = number;
+        }
+        
+        /*
          * Scheduling.
          */
 
@@ -170,7 +181,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
                 ShowInForeground = notification.ShowInForeground,
                 ForegroundPresentationOption = PresentationOption.Alert | PresentationOption.Badge | PresentationOption.Sound,
-                Badge = 1,
+                Badge = notification.AppBadgeCount,
                 CategoryIdentifier = "default_category",
                 ThreadIdentifier = string.IsNullOrWhiteSpace(notification.IOSThreadId) ? "default_thread" : notification.IOSThreadId,
                 Trigger = timeTrigger

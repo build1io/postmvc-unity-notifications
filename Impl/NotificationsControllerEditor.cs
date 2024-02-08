@@ -63,7 +63,18 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         {
             return true;
         }
+        
+        /*
+         * App badge.
+         */
 
+        public override void SetAppBadgeCounter(int number)
+        {
+            Log.Debug(a => $"SetAppBadgeCounter: {a}", number);
+            
+            // Not implemented for Editor.
+        }
+        
         /*
          * Scheduling.
          */

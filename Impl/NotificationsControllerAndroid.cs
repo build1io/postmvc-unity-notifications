@@ -106,6 +106,15 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         {
             return true;
         }
+        
+        /*
+         * App badge.
+         */
+
+        public override void SetAppBadgeCounter(int number)
+        {
+            // Not implemented for Android.
+        }
 
         /*
          * Scheduling.
@@ -116,7 +125,8 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             var androidNotification = new AndroidNotification
             {
                 Title = notification.Title,
-                Text = notification.Text
+                Text = notification.Text,
+                Number = notification.AppBadgeCount
             };
 
             if (string.IsNullOrWhiteSpace(notification.AndroidGroupId))

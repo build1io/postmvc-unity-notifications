@@ -17,6 +17,8 @@ namespace Build1.PostMVC.Unity.Notifications
         public int  TimeoutSeconds   { get; set; }
         public bool ShowInForeground { get; set; } = true;
 
+        public int AppBadgeCount { get; set; }
+
         public Notification(int id, string title, string text)
         {
             this.id = id;
@@ -76,6 +78,12 @@ namespace Build1.PostMVC.Unity.Notifications
         public Notification SetShowInForeground(bool value)
         {
             ShowInForeground = value;
+            return this;
+        }
+        
+        public Notification SetAppBadgeCount(int value)
+        {
+            AppBadgeCount = value;
             return this;
         }
 
