@@ -16,7 +16,6 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         private const string     DefaultChannelName        = "Main Channel";
         private const string     DefaultChannelDescription = "Main notifications channel";
         private const Importance DefaultChannelImportance  = Importance.High;
-        private const string     DefaultIcon               = "main";
 
         [Inject] public ICoroutineProvider CoroutineProvider { get; set; }
 
@@ -132,12 +131,10 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             if (string.IsNullOrWhiteSpace(notification.AndroidGroupId))
                 androidNotification.Group = notification.AndroidGroupId;
 
-            if (notification.IconLarge != null)
-                androidNotification.LargeIcon = notification.IconLarge;
-            else if (notification.IconSmall != null)
-                androidNotification.SmallIcon = notification.IconSmall;
-            else
-                androidNotification.LargeIcon = DefaultIcon;
+            if (notification.AndroidIconLarge != null)
+                androidNotification.LargeIcon = notification.AndroidIconLarge;
+            else if (notification.AndroidIconSmall != null)
+                androidNotification.SmallIcon = notification.AndroidIconSmall;
 
             androidNotification.FireTime = DateTime.Now.AddSeconds(notification.TimeoutSeconds);
 
