@@ -172,12 +172,13 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         {
             return status switch
             {
-                PermissionStatus.Allowed            => NotificationsAuthorizationStatus.Authorized,
-                PermissionStatus.Denied             => NotificationsAuthorizationStatus.Denied,
-                PermissionStatus.DeniedDontAskAgain => NotificationsAuthorizationStatus.Denied,
-                PermissionStatus.NotRequested       => NotificationsAuthorizationStatus.NotDetermined,
-                PermissionStatus.RequestPending     => NotificationsAuthorizationStatus.NotDetermined,
-                _                                   => throw new ArgumentOutOfRangeException()
+                PermissionStatus.Allowed                    => NotificationsAuthorizationStatus.Authorized,
+                PermissionStatus.Denied                     => NotificationsAuthorizationStatus.Denied,
+                PermissionStatus.DeniedDontAskAgain         => NotificationsAuthorizationStatus.Denied,
+                PermissionStatus.NotRequested               => NotificationsAuthorizationStatus.NotDetermined,
+                PermissionStatus.RequestPending             => NotificationsAuthorizationStatus.NotDetermined,
+                PermissionStatus.NotificationsBlockedForApp => NotificationsAuthorizationStatus.Denied,
+                _                                           => throw new ArgumentOutOfRangeException()
             };
         }
         
