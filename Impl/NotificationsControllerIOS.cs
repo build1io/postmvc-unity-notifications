@@ -187,6 +187,11 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                 Trigger = timeTrigger
             };
 
+            if (notification.IOSSoundName != null)
+                iOSNotification.SoundName = notification.IOSSoundName;
+            else if (Settings.DefaultSoundName != null)
+                iOSNotification.SoundName = Settings.DefaultSoundName;
+            
             iOSNotificationCenter.ScheduleNotification(iOSNotification);
         }
 

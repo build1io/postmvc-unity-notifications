@@ -1,12 +1,13 @@
-using System;
-
 namespace Build1.PostMVC.Unity.Notifications
 {
-    [Flags]
-    public enum NotificationsSettings
+    public record NotificationsSettings(NotificationsSetting Settings)
     {
-        RequestAuthorization           = 0,
-        DelayAuthorization             = 1 << 0,
-        RegisterForRemoteNotifications = 1 << 1
+        public string DefaultSoundName { get; private set; }
+
+        public NotificationsSettings SetDefaultSoundName(string soundName)
+        {
+            DefaultSoundName = soundName;
+            return this;
+        }
     }
 }

@@ -14,7 +14,8 @@ namespace Build1.PostMVC.Unity.Notifications
         public string AndroidIconSmall { get; set; }
         public string AndroidIconLarge { get; set; }
 
-        public string IOSThreadId { get; set; }
+        public string IOSThreadId  { get; set; }
+        public string IOSSoundName { get; set; }
 
         public int  TimeoutSeconds   { get; set; }
         public bool ShowInForeground { get; set; } = true;
@@ -62,6 +63,12 @@ namespace Build1.PostMVC.Unity.Notifications
         public Notification SetIOSThreadId(string value)
         {
             IOSThreadId = value;
+            return this;
+        }
+        
+        public Notification SetIOSSoundName(string value)
+        {
+            IOSSoundName = value;
             return this;
         }
 

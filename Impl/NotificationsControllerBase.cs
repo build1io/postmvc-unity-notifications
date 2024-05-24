@@ -8,7 +8,7 @@ using Firebase.Messaging;
 
 namespace Build1.PostMVC.Unity.Notifications.Impl
 {
-    public abstract class NotificationsControllerBase : INotificationsController
+    internal abstract class NotificationsControllerBase : INotificationsController
     {
         [Log(LogLevel.Warning)] public ILog             Log        { get; set; }
         [Inject]                public IEventDispatcher Dispatcher { get; set; }
@@ -19,8 +19,9 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         public bool                             Initialized         { get; protected set; }
         public bool                             Enabled             { get; protected set; } = true; // Enabled by default to make notifications work after initialization.
 
-        protected bool DelayAuthorization             { get; private set; }
-        protected bool RegisterForRemoteNotifications { get; private set; }
+        protected NotificationsSettings Settings                       { get; private set; }
+        protected bool                  DelayAuthorization             { get; private set; }
+        protected bool                  RegisterForRemoteNotifications { get; private set; }
 
         private NotificationsAuthorizationStatus           _status;
         private Dictionary<NotificationsTokenType, string> _tokens;
@@ -47,9 +48,11 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             Log.Debug("Initializing...");
 
             Initializing = true;
-            DelayAuthorization = (settings & NotificationsSettings.DelayAuthorization) == NotificationsSettings.DelayAuthorization;
-            RegisterForRemoteNotifications = (settings & NotificationsSettings.RegisterForRemoteNotifications) == NotificationsSettings.RegisterForRemoteNotifications;
 
+            Settings = settings;
+            DelayAuthorization = (settings.Settings & NotificationsSetting.DelayAuthorization) == NotificationsSetting.DelayAuthorization;
+            RegisterForRemoteNotifications = (settings.Settings & NotificationsSetting.RegisterForRemoteNotifications) == NotificationsSetting.RegisterForRemoteNotifications;
+            
             _status = GetAuthorizationStatus();
 
             Log.Debug(s => $"Status: {s}", _status);
@@ -131,9 +134,9 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             }
 
             Autorizing = true;
-            
+
             Dispatcher.Dispatch(NotificationsEvent.AuthorizationRequesting);
-            
+
             OnRequestAuthorization();
         }
 
@@ -190,11 +193,11 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
             Enabled = enabled;
         }
-        
+
         /*
          * App badge.
          */
-        
+
         public abstract void SetAppBadgeCounter(int number);
 
         /*
