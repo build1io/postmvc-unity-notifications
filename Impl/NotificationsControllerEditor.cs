@@ -56,6 +56,17 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         }
         
         /*
+         * Native Settings.
+         */
+
+        public override void OpenNativeSettings()
+        {
+            Log.Debug("Editor simulation. Showing authorization editor dialog...");
+            
+            EditorUtility.DisplayDialog("Notifications", "Imagine this is a notification settings window.", "Close");
+        }
+
+        /*
          * Tokens.
          */
 

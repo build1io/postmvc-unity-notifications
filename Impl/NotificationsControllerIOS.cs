@@ -19,6 +19,9 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
         [Inject] public ICoroutineProvider              CoroutineProvider              { get; set; }
         [Inject] public IInternetReachabilityController InternetReachabilityController { get; set; }
+        
+        [System.Runtime.InteropServices.DllImport ("__Internal")]
+        private static extern string GetSettingsURL();
 
         private Coroutine _coroutine;
 
@@ -75,7 +78,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                 OnAuthorizationComplete(GetAuthorizationStatus());
             });
         }
-        
+
         private void RequestAuthorization(Action onComplete)
         {
             if (!RegisterForRemoteNotifications)
@@ -138,6 +141,19 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             }
         }
         
+        /*
+         * Native Settings.
+         */
+        
+        public override void OpenNativeSettings()
+        {
+            var url = GetSettingsURL();
+            
+            Log.Debug(u => $"The settings url is: {u}", url);
+            
+            Application.OpenURL(url);
+        }
+
         /*
          * Tokens.
          */

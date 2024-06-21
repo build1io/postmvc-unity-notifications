@@ -77,7 +77,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         {
             CoroutineProvider.StartCoroutine(RequestAuthorizationCoroutine(), out _coroutine);
         }
-        
+
         private IEnumerator RequestAuthorizationCoroutine()
         {
             Log.Debug("Request authorization...");
@@ -95,6 +95,31 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                 RegisterNotificationChannel();
             
             OnAuthorizationComplete(status);
+        }
+        
+        /*
+         * Native Settings.
+         */
+
+        public override void OpenNativeSettings()
+        {
+            try
+            {
+                using var unityClass = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+                using var currentActivityObject = unityClass.GetStatic<AndroidJavaObject>("currentActivity");
+                var packageName = currentActivityObject.Call<string>("getPackageName");
+
+                using var uriClass = new AndroidJavaClass("android.net.Uri");
+                using var uriObject = uriClass.CallStatic<AndroidJavaObject>("fromParts", "package", packageName, null);
+                using var intentObject = new AndroidJavaObject("android.content.Intent", "android.settings.APP_NOTIFICATION_SETTINGS", uriObject);
+                intentObject.Call<AndroidJavaObject>("addCategory", "android.intent.category.DEFAULT");
+                intentObject.Call<AndroidJavaObject>("setFlags", 0x10000000);
+                currentActivityObject.Call("startActivity", intentObject);
+            }
+            catch (Exception exception)
+            {
+                Log.Error(exception);
+            }
         }
         
         /*

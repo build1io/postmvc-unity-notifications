@@ -182,6 +182,12 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                     throw new ArgumentOutOfRangeException(nameof(status), status, null);
             }
         }
+        
+        /*
+         * Native Settings.
+         */
+        
+        public abstract void OpenNativeSettings();
 
         /*
          * Settings.

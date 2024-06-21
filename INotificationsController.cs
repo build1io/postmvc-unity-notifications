@@ -8,7 +8,9 @@ namespace Build1.PostMVC.Unity.Notifications
         bool                             Enabled             { get; }
 
         void Initialize(NotificationsSettings settings);
+
         void RequestAuthorization();
+        void OpenNativeSettings();
 
         void SetEnabled(bool enabled);
         void SetAppBadgeCounter(int number);
