@@ -19,7 +19,7 @@ namespace Build1.PostMVC.Unity.Notifications
             #elif UNITY_ANDROID
                 InjectionBinder.Bind<INotificationsController, Impl.NotificationsControllerAndroid>();
             #elif UNITY_IOS
-                InjectionBinder.Bind<INotificationsController, Impl.NotificationsControllerIOS>().ConstructOnStart();    
+                InjectionBinder.Bind<INotificationsController, Impl.NotificationsControllerIOS>();
             #endif
             
             CommandBinder.Bind(AppEvent.Pause)

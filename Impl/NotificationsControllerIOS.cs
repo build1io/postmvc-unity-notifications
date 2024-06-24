@@ -28,14 +28,14 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         [PostConstruct]
         public void PostConstruct()
         {
-            Dispatcher.AddListener(AppEvent.Pause, OnAppPause);
+            Dispatcher.AddListener(AppEvent.Focus, OnAppFocus);
             Dispatcher.AddListener(NotificationsEvent.AuthorizationStatusChanged, OnAuthorizationStatusChanged);
         }
 
         [PreDestroy]
         public void PreDestroy()
         {
-            Dispatcher.RemoveListener(AppEvent.Pause, OnAppPause);
+            Dispatcher.RemoveListener(AppEvent.Focus, OnAppFocus);
             Dispatcher.RemoveListener(NotificationsEvent.AuthorizationStatusChanged, OnAuthorizationStatusChanged);
 
             CoroutineProvider.StopCoroutine(ref _coroutine);
@@ -256,9 +256,9 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
          * Event Handlers.
          */
 
-        private void OnAppPause(bool paused)
+        private void OnAppFocus(bool focused)
         {
-            if (Initialized && !Autorizing && !paused)
+            if (Initialized && !Autorizing && focused)
                 TryUpdateAuthorizationStatus(GetAuthorizationStatus());
         }
 
