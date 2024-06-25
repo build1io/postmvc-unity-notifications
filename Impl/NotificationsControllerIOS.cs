@@ -19,8 +19,8 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
         [Inject] public ICoroutineProvider              CoroutineProvider              { get; set; }
         [Inject] public IInternetReachabilityController InternetReachabilityController { get; set; }
-        
-        [System.Runtime.InteropServices.DllImport ("__Internal")]
+
+        [System.Runtime.InteropServices.DllImport("__Internal")]
         private static extern string GetSettingsURL();
 
         private Coroutine _coroutine;
@@ -28,6 +28,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         [PostConstruct]
         public void PostConstruct()
         {
+            Dispatcher.AddListener(AppEvent.Pause, OnAppPause);
             Dispatcher.AddListener(AppEvent.Focus, OnAppFocus);
             Dispatcher.AddListener(NotificationsEvent.AuthorizationStatusChanged, OnAuthorizationStatusChanged);
         }
@@ -35,12 +36,13 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         [PreDestroy]
         public void PreDestroy()
         {
+            Dispatcher.RemoveListener(AppEvent.Pause, OnAppPause);
             Dispatcher.RemoveListener(AppEvent.Focus, OnAppFocus);
             Dispatcher.RemoveListener(NotificationsEvent.AuthorizationStatusChanged, OnAuthorizationStatusChanged);
 
             CoroutineProvider.StopCoroutine(ref _coroutine);
         }
-        
+
         /*
          * Initializing.
          */
@@ -55,10 +57,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
             // If user already authorized notifications, we request authorization anyway.
             // It runs silently and loads an Apple Push Notifications Token. It might be used by other components.
-            RequestAuthorization(() =>
-            {
-                base.OnInitialize(status);
-            });
+            RequestAuthorization(() => { base.OnInitialize(status); });
         }
 
         /*
@@ -73,10 +72,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
         protected override void OnRequestAuthorization()
         {
-            RequestAuthorization(() =>
-            {
-                OnAuthorizationComplete(GetAuthorizationStatus());
-            });
+            RequestAuthorization(() => { OnAuthorizationComplete(GetAuthorizationStatus()); });
         }
 
         private void RequestAuthorization(Action onComplete)
@@ -105,7 +101,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         {
             CoroutineProvider.StartCoroutine(RequestAuthorizationCoroutine(AuthorizationOptions, registerForRemoteNotifications, onComplete), out _coroutine);
         }
-        
+
         private IEnumerator RequestAuthorizationCoroutine(AuthorizationOption authorizationOptions, bool registerForRemoteNotifications, Action onComplete)
         {
             Log.Debug((a, r) => $"RequestAuthorizationCoroutine: options: {a} remote: {r}", authorizationOptions, registerForRemoteNotifications);
@@ -119,9 +115,9 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                 }
 
                 _coroutine = null;
-                
+
                 Log.Debug("Authorization request complete");
-            
+
                 if (request.Granted)
                 {
                     Log.Debug(t => $"Authorized. DeviceToken: \'{t}\'", request.DeviceToken);
@@ -136,21 +132,21 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                 {
                     Log.Debug("Not authorized. User denied notifications request.");
                 }
-                
+
                 onComplete();
             }
         }
-        
+
         /*
          * Native Settings.
          */
-        
+
         public override void OpenNativeSettings()
         {
             var url = GetSettingsURL();
-            
+
             Log.Debug(u => $"The settings url is: {u}", url);
-            
+
             Application.OpenURL(url);
         }
 
@@ -171,10 +167,10 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         public override void SetAppBadgeCounter(int number)
         {
             Log.Debug(a => $"SetAppBadgeCounter: {a}", number);
-            
+
             iOSNotificationCenter.ApplicationBadge = number;
         }
-        
+
         /*
          * Scheduling.
          */
@@ -207,7 +203,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                 iOSNotification.SoundName = notification.IOSSoundName;
             else if (Settings.DefaultSoundName != null)
                 iOSNotification.SoundName = Settings.DefaultSoundName;
-            
+
             iOSNotificationCenter.ScheduleNotification(iOSNotification);
         }
 
@@ -256,6 +252,12 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
          * Event Handlers.
          */
 
+        private void OnAppPause(bool paused)
+        {
+            if (Initialized && !Autorizing && !paused)
+                TryUpdateAuthorizationStatus(GetAuthorizationStatus());
+        }
+
         private void OnAppFocus(bool focused)
         {
             if (Initialized && !Autorizing && focused)
@@ -264,7 +266,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
         private void OnAuthorizationStatusChanged(NotificationsAuthorizationStatus status)
         {
-            if (!Initialized || Autorizing || status != NotificationsAuthorizationStatus.Authorized) 
+            if (!Initialized || Autorizing || status != NotificationsAuthorizationStatus.Authorized)
                 return;
 
             if (!TryGetToken(NotificationsTokenType.IOSDeviceToken, out _))
