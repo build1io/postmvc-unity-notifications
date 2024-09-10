@@ -214,13 +214,13 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
         private void OnAppPause(bool paused)
         {
-            if (Initialized && !Autorizing && !paused)
+            if (Initialized && !Authorizing && !paused)
                 TryUpdateAuthorizationStatus(GetAuthorizationStatus());
         }
 
         private void OnAuthorizationStatusChanged(NotificationsAuthorizationStatus status)
         {
-            if (!Initialized || Autorizing || status != NotificationsAuthorizationStatus.Authorized) 
+            if (!Initialized || Authorizing || status != NotificationsAuthorizationStatus.Authorized) 
                 return;
             
             if (!TryGetToken(NotificationsTokenType.FirebaseDeviceToken, out _))

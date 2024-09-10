@@ -2,10 +2,12 @@ namespace Build1.PostMVC.Unity.Notifications
 {
     public interface INotificationsController
     {
-        NotificationsAuthorizationStatus AuthorizationStatus { get; }
         bool                             Initializing        { get; }
         bool                             Initialized         { get; }
         bool                             Enabled             { get; }
+        bool                             Authorizing         { get; }
+        bool                             Authorized          { get; }
+        NotificationsAuthorizationStatus AuthorizationStatus { get; }
 
         void Initialize(NotificationsSettings settings);
 

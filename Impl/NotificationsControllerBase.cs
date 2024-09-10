@@ -13,11 +13,12 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         [Log(LogLevel.Warning)] public ILog             Log        { get; set; }
         [Inject]                public IEventDispatcher Dispatcher { get; set; }
 
-        public bool                             Autorizing          { get; private set; }
+        public bool                             Initializing        { get; private set; }
+        public bool                             Initialized         { get; private set; }
+        public bool                             Enabled             { get; private set; } = true; // Enabled by default to make notifications work after initialization.
+        public bool                             Authorizing         { get; private set; }
+        public bool                             Authorized          => _status == NotificationsAuthorizationStatus.Authorized;
         public NotificationsAuthorizationStatus AuthorizationStatus => _status;
-        public bool                             Initializing        { get; protected set; }
-        public bool                             Initialized         { get; protected set; }
-        public bool                             Enabled             { get; protected set; } = true; // Enabled by default to make notifications work after initialization.
 
         protected NotificationsSettings Settings                       { get; private set; }
         protected bool                  DelayAuthorization             { get; private set; }
@@ -52,7 +53,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             Settings = settings;
             DelayAuthorization = (settings.Settings & NotificationsSetting.DelayAuthorization) == NotificationsSetting.DelayAuthorization;
             RegisterForRemoteNotifications = (settings.Settings & NotificationsSetting.RegisterForRemoteNotifications) == NotificationsSetting.RegisterForRemoteNotifications;
-            
+
             _status = GetAuthorizationStatus();
 
             Log.Debug(s => $"Status: {s}", _status);
@@ -127,13 +128,13 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                 return;
             }
 
-            if (Autorizing)
+            if (Authorizing)
             {
                 Log.Error("Authorization already in progress");
                 return;
             }
 
-            Autorizing = true;
+            Authorizing = true;
 
             Dispatcher.Dispatch(NotificationsEvent.AuthorizationRequesting);
 
@@ -144,7 +145,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
         protected void OnAuthorizationComplete(NotificationsAuthorizationStatus status)
         {
-            if (!Autorizing)
+            if (!Authorizing)
                 return;
 
             Log.Debug(s => $"Authorization complete: {s}", status);
@@ -152,7 +153,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             if (!TryUpdateAuthorizationStatus(status))
                 Dispatcher.Dispatch(NotificationsEvent.AuthorizationCanceled);
 
-            Autorizing = false;
+            Authorizing = false;
 
             if (_notificationsToSchedule != null)
             {
@@ -182,11 +183,11 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                     throw new ArgumentOutOfRangeException(nameof(status), status, null);
             }
         }
-        
+
         /*
          * Native Settings.
          */
-        
+
         public abstract void OpenNativeSettings();
 
         /*

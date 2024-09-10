@@ -179,7 +179,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         {
             var timeTrigger = new iOSNotificationTimeIntervalTrigger
             {
-                TimeInterval = new TimeSpan(0, 0, notification.TimeoutSeconds),
+                TimeInterval = new TimeSpan(0, 0, Math.Max(notification.TimeoutSeconds, 1)),
                 Repeats = false
             };
 
@@ -254,19 +254,19 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
         private void OnAppPause(bool paused)
         {
-            if (Initialized && !Autorizing && !paused)
+            if (Initialized && !Authorizing && !paused)
                 TryUpdateAuthorizationStatus(GetAuthorizationStatus());
         }
 
         private void OnAppFocus(bool focused)
         {
-            if (Initialized && !Autorizing && focused)
+            if (Initialized && !Authorizing && focused)
                 TryUpdateAuthorizationStatus(GetAuthorizationStatus());
         }
 
         private void OnAuthorizationStatusChanged(NotificationsAuthorizationStatus status)
         {
-            if (!Initialized || Autorizing || status != NotificationsAuthorizationStatus.Authorized)
+            if (!Initialized || Authorizing || status != NotificationsAuthorizationStatus.Authorized)
                 return;
 
             if (!TryGetToken(NotificationsTokenType.IOSDeviceToken, out _))
