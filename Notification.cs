@@ -20,7 +20,7 @@ namespace Build1.PostMVC.Unity.Notifications
         public int  TimeoutSeconds   { get; set; }
         public bool ShowInForeground { get; set; } = true;
 
-        public int AppBadgeCount { get; set; }
+        public int AppBadgeCount { get; set; } = -1;
 
         public Notification(int id, string title, string text)
         {

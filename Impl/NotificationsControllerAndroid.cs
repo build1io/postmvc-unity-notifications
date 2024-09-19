@@ -149,9 +149,11 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             var androidNotification = new AndroidNotification
             {
                 Title = notification.Title,
-                Text = notification.Text,
-                Number = notification.AppBadgeCount
+                Text = notification.Text
             };
+
+            if (notification.AppBadgeCount >= 0)
+                androidNotification.Number = notification.AppBadgeCount; 
 
             if (string.IsNullOrWhiteSpace(notification.AndroidGroupId))
                 androidNotification.Group = notification.AndroidGroupId;

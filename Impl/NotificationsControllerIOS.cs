@@ -193,11 +193,13 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
                 ShowInForeground = notification.ShowInForeground,
                 ForegroundPresentationOption = PresentationOption.Alert | PresentationOption.Badge | PresentationOption.Sound,
-                Badge = notification.AppBadgeCount,
                 CategoryIdentifier = "default_category",
                 ThreadIdentifier = string.IsNullOrWhiteSpace(notification.IOSThreadId) ? "default_thread" : notification.IOSThreadId,
                 Trigger = timeTrigger
             };
+
+            if (notification.AppBadgeCount >= 0)
+                iOSNotification.Badge = notification.AppBadgeCount;
 
             if (notification.IOSSoundName != null)
                 iOSNotification.SoundName = notification.IOSSoundName;
