@@ -75,7 +75,8 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                     break;
 
                 case NotificationsAuthorizationStatus.Authorized:
-                    GetFirebaseToken(CompleteInitialization);
+                    GetFirebaseToken();
+                    CompleteInitialization();
                     break;
 
                 case NotificationsAuthorizationStatus.Denied:
@@ -170,7 +171,9 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             switch (status)
             {
                 case NotificationsAuthorizationStatus.Authorized:
-                    GetFirebaseToken(Initialized ? null : CompleteInitialization);
+                    GetFirebaseToken();
+                    if (!Initialized)
+                        CompleteInitialization();
                     break;
 
                 case NotificationsAuthorizationStatus.Denied:
@@ -234,12 +237,11 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
         protected abstract bool CheckFirebaseTokenLoadingAllowed();
 
-        protected void GetFirebaseToken(Action onComplete)
+        protected void GetFirebaseToken()
         {
             if (!CheckFirebaseTokenLoadingAllowed())
             {
                 Log.Warn("Firebase token loading not allowed");
-                onComplete?.Invoke();
                 return;
             }
 
@@ -250,8 +252,6 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                 var token = task.Result;
 
                 AddToken(NotificationsTokenType.FirebaseDeviceToken, token);
-
-                onComplete?.Invoke();
             });
         }
 

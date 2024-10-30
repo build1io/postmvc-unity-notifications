@@ -226,7 +226,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                 return;
             
             if (!TryGetToken(NotificationsTokenType.FirebaseDeviceToken, out _))
-                GetFirebaseToken(null);
+                GetFirebaseToken();
         }
     }
 }

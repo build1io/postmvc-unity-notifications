@@ -49,15 +49,18 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
         protected override void OnInitialize(NotificationsAuthorizationStatus status)
         {
-            if (status != NotificationsAuthorizationStatus.Authorized)
-            {
-                base.OnInitialize(status);
-                return;
-            }
-
             // If user already authorized notifications, we request authorization anyway.
             // It runs silently and loads an Apple Push Notifications Token. It might be used by other components.
-            RequestAuthorization(() => { base.OnInitialize(status); });
+            if (status == NotificationsAuthorizationStatus.Authorized)
+            {
+                RequestAuthorization(() =>
+                {
+                    if (!TryGetToken(NotificationsTokenType.FirebaseDeviceToken, out _))
+                        GetFirebaseToken();
+                });
+            }
+
+            base.OnInitialize(status);
         }
 
         /*
@@ -133,7 +136,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                     Log.Debug("Not authorized. User denied notifications request.");
                 }
 
-                onComplete();
+                onComplete?.Invoke();
             }
         }
 
@@ -277,12 +280,12 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                 RequestAuthorization(() =>
                 {
                     if (!TryGetToken(NotificationsTokenType.FirebaseDeviceToken, out _))
-                        GetFirebaseToken(null);
+                        GetFirebaseToken();
                 });
             }
             else if (!TryGetToken(NotificationsTokenType.FirebaseDeviceToken, out _))
             {
-                GetFirebaseToken(null);
+                GetFirebaseToken();
             }
         }
     }
