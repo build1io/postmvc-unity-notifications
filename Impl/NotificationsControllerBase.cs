@@ -10,8 +10,8 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 {
     internal abstract class NotificationsControllerBase : INotificationsController
     {
-        [Log(LogLevel.Warning)] public ILog             Log        { get; set; }
-        [Inject]                public IEventDispatcher Dispatcher { get; set; }
+        [Log(LogLevel.Error)] public ILog             Log        { get; set; }
+        [Inject]              public IEventDispatcher Dispatcher { get; set; }
 
         public bool                             Initializing        { get; private set; }
         public bool                             Initialized         { get; private set; }
