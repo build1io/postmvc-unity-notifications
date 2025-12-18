@@ -3,6 +3,7 @@
 using System;
 using System.Collections;
 using Build1.PostMVC.Core.MVCS.Injection;
+using Build1.PostMVC.Unity.App.Events;
 using Build1.PostMVC.Unity.App.Modules.App;
 using Build1.PostMVC.Unity.App.Modules.Coroutines;
 using Build1.PostMVC.Unity.App.Modules.InternetReachability;
@@ -17,6 +18,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                                                                  AuthorizationOption.Badge |
                                                                  AuthorizationOption.Sound;
 
+        [Inject] public IEventMap                       EventMap                       { get; set; }
         [Inject] public ICoroutineProvider              CoroutineProvider              { get; set; }
         [Inject] public IInternetReachabilityController InternetReachabilityController { get; set; }
 
@@ -28,17 +30,15 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         [PostConstruct]
         public void PostConstruct()
         {
-            Dispatcher.AddListener(AppEvent.Pause, OnAppPause);
-            Dispatcher.AddListener(AppEvent.Focus, OnAppFocus);
-            Dispatcher.AddListener(NotificationsEvent.AuthorizationStatusChanged, OnAuthorizationStatusChanged);
+            EventMap.Map(AppEvent.Pause, OnAppPause);
+            EventMap.Map(AppEvent.Focus, OnAppFocus);
+            EventMap.Map(NotificationsEvent.AuthorizationStatusChanged, OnAuthorizationStatusChanged);
         }
 
         [PreDestroy]
         public void PreDestroy()
         {
-            Dispatcher.RemoveListener(AppEvent.Pause, OnAppPause);
-            Dispatcher.RemoveListener(AppEvent.Focus, OnAppFocus);
-            Dispatcher.RemoveListener(NotificationsEvent.AuthorizationStatusChanged, OnAuthorizationStatusChanged);
+            EventMap.UnmapAll();
 
             CoroutineProvider.StopCoroutine(ref _coroutine);
         }
@@ -88,7 +88,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
             Log.Debug("Checking internet connection...");
 
-            InternetReachabilityController.Check(reachable =>
+            EventMap.MapOnce(InternetReachabilityEvent.CheckComplete, (reachable, _) =>
             {
                 Log.Debug(log =>
                 {
@@ -98,6 +98,9 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
                 RequestAuthorizationImpl(reachable, onComplete);
             });
+            
+            if (!InternetReachabilityController.IsChecking)
+                InternetReachabilityController.Check();
         }
 
         private void RequestAuthorizationImpl(bool registerForRemoteNotifications, Action onComplete)
