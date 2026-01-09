@@ -3,15 +3,14 @@ using System.Collections.Generic;
 using Build1.PostMVC.Core.MVCS.Events;
 using Build1.PostMVC.Core.MVCS.Injection;
 using Build1.PostMVC.Unity.App.Modules.Logging;
-using Firebase.Extensions;
-using Firebase.Messaging;
 
 namespace Build1.PostMVC.Unity.Notifications.Impl
 {
     internal abstract class NotificationsControllerBase : INotificationsController
     {
-        [Log(LogLevel.Error)] public ILog             Log        { get; set; }
-        [Inject]              public IEventDispatcher Dispatcher { get; set; }
+        [Log(LogLevel.Error)] public ILog             Log             { get; set; }
+        [Inject]              public IEventDispatcher Dispatcher      { get; set; }
+        [Inject]              public IInjectionBinder InjectionBinder { get; set; }
 
         public bool                             Initializing        { get; private set; }
         public bool                             Initialized         { get; private set; }
@@ -75,7 +74,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                     break;
 
                 case NotificationsAuthorizationStatus.Authorized:
-                    GetFirebaseToken();
+                    GetFCMToken();
                     CompleteInitialization();
                     break;
 
@@ -171,7 +170,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             switch (status)
             {
                 case NotificationsAuthorizationStatus.Authorized:
-                    GetFirebaseToken();
+                    GetFCMToken();
                     if (!Initialized)
                         CompleteInitialization();
                     break;
@@ -237,7 +236,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
         protected abstract bool CheckFirebaseTokenLoadingAllowed();
 
-        protected void GetFirebaseToken()
+        protected void GetFCMToken()
         {
             if (!CheckFirebaseTokenLoadingAllowed())
             {
@@ -247,12 +246,8 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
             Log.Debug("Requesting Firebase notifications token...");
 
-            FirebaseMessaging.GetTokenAsync().ContinueWithOnMainThread(task =>
-            {
-                var token = task.Result;
-
-                AddToken(NotificationsTokenType.FirebaseDeviceToken, token);
-            });
+            InjectionBinder.Get<IFCMTokenProvider>()
+                           .GetToken(token => { AddToken(NotificationsTokenType.FirebaseDeviceToken, token); });
         }
 
         /*

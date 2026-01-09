@@ -3,6 +3,7 @@ using Build1.PostMVC.Core.MVCS.Commands;
 using Build1.PostMVC.Core.MVCS.Injection;
 using Build1.PostMVC.Unity.App.Modules.App;
 using Build1.PostMVC.Unity.Notifications.Commands;
+using Build1.PostMVC.Unity.Notifications.Impl;
 
 namespace Build1.PostMVC.Unity.Notifications
 {
@@ -21,6 +22,8 @@ namespace Build1.PostMVC.Unity.Notifications
             #elif UNITY_IOS
                 InjectionBinder.Bind<INotificationsController, Impl.NotificationsControllerIOS>();
             #endif
+            
+            InjectionBinder.Bind<IFCMTokenProvider, FCMTokenProviderFirebaseMessaging>();
             
             CommandBinder.Bind(AppEvent.Pause)
                          .TriggerCondition(false)

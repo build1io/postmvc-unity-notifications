@@ -56,7 +56,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                 RequestAuthorization(() =>
                 {
                     if (!TryGetToken(NotificationsTokenType.FirebaseDeviceToken, out _))
-                        GetFirebaseToken();
+                        GetFCMToken();
                 });
             }
 
@@ -283,12 +283,12 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
                 RequestAuthorization(() =>
                 {
                     if (!TryGetToken(NotificationsTokenType.FirebaseDeviceToken, out _))
-                        GetFirebaseToken();
+                        GetFCMToken();
                 });
             }
             else if (!TryGetToken(NotificationsTokenType.FirebaseDeviceToken, out _))
             {
-                GetFirebaseToken();
+                GetFCMToken();
             }
         }
     }
