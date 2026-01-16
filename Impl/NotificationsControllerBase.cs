@@ -8,9 +8,9 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 {
     internal abstract class NotificationsControllerBase : INotificationsController
     {
-        [Log(LogLevel.Error)] public ILog             Log             { get; set; }
-        [Inject]              public IEventDispatcher Dispatcher      { get; set; }
-        [Inject]              public IInjectionBinder InjectionBinder { get; set; }
+        [Log(LogLevel.Warning)] public ILog             Log             { get; set; }
+        [Inject]                public IEventDispatcher Dispatcher      { get; set; }
+        [Inject]                public IInjectionBinder InjectionBinder { get; set; }
 
         public bool                             Initializing        { get; private set; }
         public bool                             Initialized         { get; private set; }
@@ -246,8 +246,10 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
             Log.Debug("Requesting Firebase notifications token...");
 
-            InjectionBinder.Get<IFCMTokenProvider>()
-                           .GetToken(token => { AddToken(NotificationsTokenType.FirebaseDeviceToken, token); });
+            if (InjectionBinder.TryGet<IFCMTokenProvider>(out var tokenProvider))
+                tokenProvider.GetToken(token => { AddToken(NotificationsTokenType.FirebaseDeviceToken, token); });
+            else
+                Log.Warn("FCM token provider not found. Device token will not be loaded.");
         }
 
         /*
