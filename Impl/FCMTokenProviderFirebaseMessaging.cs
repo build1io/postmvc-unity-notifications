@@ -1,3 +1,5 @@
+#if FIREBASE_MESSAGING_AVAILABLE
+
 using System;
 using Build1.PostMVC.Unity.App.Modules.Logging;
 using Firebase.Extensions;
@@ -24,3 +26,5 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         }
     }
 }
+
+#endif

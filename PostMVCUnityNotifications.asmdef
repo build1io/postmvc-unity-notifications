@@ -15,6 +15,12 @@
     "precompiledReferences": [],
     "autoReferenced": true,
     "defineConstraints": [],
-    "versionDefines": [],
+    "versionDefines": [
+        {
+            "name": "com.google.firebase.messaging",
+            "expression": "",
+            "define": "FIREBASE_MESSAGING_AVAILABLE"
+        }
+    ],
     "noEngineReferences": false
 }
