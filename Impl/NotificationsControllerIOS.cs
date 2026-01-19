@@ -88,7 +88,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
 
             Log.Debug("Checking internet connection...");
 
-            EventMap.MapOnce(InternetReachabilityEvent.CheckComplete, (reachable, _) =>
+            EventMap.MapOnce(InternetReachabilityEvent.CheckComplete, reachable =>
             {
                 Log.Debug(log =>
                 {
