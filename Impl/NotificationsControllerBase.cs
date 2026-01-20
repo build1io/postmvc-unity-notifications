@@ -240,7 +240,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
         {
             if (!CheckFirebaseTokenLoadingAllowed())
             {
-                Log.Warn("Firebase token loading not allowed");
+                Log.Debug("Firebase token loading not allowed");
                 return;
             }
 
@@ -249,7 +249,7 @@ namespace Build1.PostMVC.Unity.Notifications.Impl
             if (InjectionBinder.TryGet<IFCMTokenProvider>(out var tokenProvider))
                 tokenProvider.GetToken(token => { AddToken(NotificationsTokenType.FirebaseDeviceToken, token); });
             else
-                Log.Warn("FCM token provider not found. Device token will not be loaded.");
+                Log.Debug("FCM token provider not found. Device token will not be loaded.");
         }
 
         /*
